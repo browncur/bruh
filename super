@@ -1,0 +1,186 @@
+--[[local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local MarketplaceService = game:GetService("MarketplaceService")
+local gamename = MarketplaceService:GetProductInfo(game.PlaceId).Name
+
+local Window = Fluent:CreateWindow({
+    Title = "Apel Hub",
+    SubTitle = tostring(gamename),
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = false, -- The blur may be detectable, setting this to false disables blur entirely
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+})
+
+
+local Tabs = {
+    Credits = Window:AddTab({Title = "Credits", Icon = "book"}),
+    Farm = Window:AddTab({ Title = "Farming", Icon = "align-center" }),
+    Misc = Window:AddTab({Title = "Misс", Icon = "diamond"}),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+
+}
+
+local Options = Fluent.Options
+local player = game:GetService("Players").LocalPlayer
+local character = player.Character
+
+    local bb=game:service'VirtualUser'
+    game:service'Players'.LocalPlayer.Idled:connect(function()
+    bb:CaptureController()bb:ClickButton2(Vector2.new())end)
+do
+    Tabs.Farm:AddButton({
+        Title = "Add Money",
+        Description = "Adding inf amount of money",
+        Callback = function()
+            game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Gold"):WaitForChild("ChangeGoldRF"):InvokeServer("ChangeGold", math.huge, false)
+        end
+    })
+
+    Tabs.Farm:AddButton({
+        Title = "Free GamePasses",
+        Description = "Giving gamepasses for free",
+        Callback = function()
+            function getNil(name,class) for _,v in next, getnilinstances() do if v.ClassName==class and v.Name==name then return v;end end end
+
+local args = {
+    [1] = "Cashier",
+    [2] = 16,
+    [3] = true
+}
+ 
+game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Goods"):WaitForChild("GamePassRE"):FireServer(unpack(args))
+
+for _, actor in (getdeletedactors and getdeletedactors()) or (getactors and getactors()) do 
+    run_on_actor(actor, Script)
+end
+
+wait()
+
+function getNil(name,class) for _,v in next, getnilinstances() do if v.ClassName==class and v.Name==name then return v;end end end
+
+local args = {
+    [1] = "Porter",
+    [2] = 10,
+    [3] = true
+}
+ 
+game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Goods"):WaitForChild("GamePassRE"):FireServer(unpack(args))
+
+for _, actor in (getdeletedactors and getdeletedactors()) or (getactors and getactors()) do 
+    run_on_actor(actor, Script)
+end
+
+wait()
+
+function getNil(name,class) for _,v in next, getnilinstances() do if v.ClassName==class and v.Name==name then return v;end end end
+
+local args = {
+    [1] = "Quick-checkout",
+    [2] = 1100,
+    [3] = true
+}
+ 
+game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Goods"):WaitForChild("GamePassRE"):FireServer(unpack(args))
+
+for _, actor in (getdeletedactors and getdeletedactors()) or (getactors and getactors()) do 
+    run_on_actor(actor, Script)
+end
+
+wait()
+
+function getNil(name,class) for _,v in next, getnilinstances() do if v.ClassName==class and v.Name==name then return v;end end end
+
+local args = {
+    [1] = "Quick Pricing",
+    [2] = 110,
+    [3] = true
+}
+ 
+game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Goods"):WaitForChild("GamePassRE"):FireServer(unpack(args))
+
+for _, actor in (getdeletedactors and getdeletedactors()) or (getactors and getactors()) do 
+    run_on_actor(actor, Script)
+end
+
+
+
+        end
+    })
+
+    Tabs.Farm:AddButton({
+        Title = "Inf Xp",
+        Description = "",
+        Callback = function()
+            function getNil(name,class) for _,v in next, getnilinstances() do if v.ClassName==class and v.Name==name then return v;end end end
+
+local args = {
+    [1] = 160000000000000000,
+    [2] = true
+}
+ 
+game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Exp"):WaitForChild("ChangeExpRE"):FireServer(unpack(args))
+
+for _, actor in (getdeletedactors and getdeletedactors()) or (getactors and getactors()) do 
+    run_on_actor(actor, Script)
+end
+        end
+    })
+end
+
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("Apel Hub")
+SaveManager:SetFolder("Apel Hub/".."Super Market Simulator")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+SaveManager:LoadAutoloadConfig()
+
+-- Gui to Lua
+-- Version: 3.2
+
+-- Instances:
+local Menu = game:GetService("CoreGui"):FindFirstChild("Menu")
+if Menu then
+    print("Найдено меню")
+else
+    local Menu = Instance.new("ScreenGui")
+Menu.Name = "Menu"
+local Frame = Instance.new("Frame")
+Frame.Name = "Menu Button"
+local ImageButton = Instance.new("ImageButton")
+local UIAspectRatioConstraint = Instance.new("UIAspectRatioConstraint")
+local UIAspectRatioConstraint_2 = Instance.new("UIAspectRatioConstraint")
+
+--Properties:
+local coreGui = game:GetService("CoreGui")
+Menu.Parent = coreGui
+Menu.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = Menu
+Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.167999998, 0, 0.230493277, 0)
+Frame.Size = UDim2.new(0.040533334, 0, 0.0681614354, 0)
+
+ImageButton.Parent = Frame
+ImageButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ImageButton.BorderSizePixel = 0
+ImageButton.Size = UDim2.new(1, 0, 1, 0)
+ImageButton.Image = "http://www.roblox.com/asset/?id=181239831"
+ImageButton.MouseButton1Up:Connect(function()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true,"LeftControl",false,game)
+end)
+
+UIAspectRatioConstraint.Parent = ImageButton
+
+UIAspectRatioConstraint_2.Parent = Frame
+end]]
+
+print('wrong script')
