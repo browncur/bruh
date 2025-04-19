@@ -414,7 +414,7 @@ do
                 local targetCFrame = CFrame.new(targetPosition)
                 local targetPos = targetCFrame.Position
                 local tolerance = 2 
-                local targetTime = 16
+                local targetTime = 18
 
 
                 local distance = (targetPos - hrp.Position).Magnitude
@@ -1727,7 +1727,7 @@ do
                 end
             end
         end
-        
+
         if checker == false then
             local args = {
                 [1] = "UseGoldenOrb"
