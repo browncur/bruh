@@ -237,23 +237,6 @@ do
         end
     end)
 
-    local AutoSellBubble = Tabs.Farm:CreateToggle("Auto Sell Bubble", {Title = "Auto Sell Bubble", Default = false, Description = ""})
-
-    AutoSellBubble:OnChanged(function(State)
-        getgenv().AutoSellBubble = State
-        while getgenv().AutoSellBubble == true do
-            if not getgenv().AutoSellBubble == true then return end
-            task.wait(1)
-            local args = {
-                [1] = "SellBubble"
-            }
-            
-            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
-        end
-    end)
-
-
-
     local AutoCollectDrops = Tabs.Misc:CreateToggle("Auto Collect Drops", {Title = "Auto Collect Drops", Default = false, Description = ""})
 
     AutoCollectDrops:OnChanged(function(State)
@@ -927,6 +910,7 @@ do
                     local hm = findHumanoidRootPart()
                     if nearestIsland  and hm then
                         moveToPart(nearestIsland)
+
                     end
                 end
             end
@@ -935,6 +919,7 @@ do
                 while getgenv().AutoOpenRiftEggs == true do
                     task.wait()
                     teleportToNearestIsland()
+                    task.wait(13)
                 end
             end)()
 
@@ -970,6 +955,7 @@ do
                         moveToSavedCoord()
                         getgenv().TryingToOpenRiftEgg = false
                     end
+                    task.wait(13)
                 end
             end)()
 
@@ -1230,6 +1216,7 @@ do
                 while getgenv().AutoOpenRiftChests == true do
                     task.wait()
                     teleportToNearestIslandForChest()
+                    task.wait(13)
                 end
             end)()
 
@@ -1270,6 +1257,7 @@ do
                         moveToSavedCoord()
                         getgenv().TryingToOpenRiftChest = false
                     end
+                    task.wait(13)
                 end
             end)()
 
@@ -1547,6 +1535,46 @@ do
             end
         end
 
+    end)
+
+    getgenv().AutoFarmCoinsLimit = 1
+    local AutoFarmCoinsLimit = Tabs.Eggs:CreateInput("Amount Of Coins Limit", {
+        Title = "Amount Of Coins For Auto Farm",
+        Default = 100000000000, 
+        Description = "",
+        Numeric = true,
+        Finished = false,
+        Callback = function(Value)
+            getgenv().AutoFarmCoinsLimit = tonumber(Value)
+        end
+    })
+    AutoFarmCoinsLimit:OnChanged(function(Value)
+        getgenv().AutoFarmCoinsLimit = tonumber(Value)
+    end)
+
+    local AutoFarmCoins = Tabs.Farm:CreateToggle("AutoFarmCoins", {Title = "Auto Farm Coins if less than Selected Amount", Default = false, Description = "MUST ENABLE AUTO COLLECT"})
+    local function checkCoins()
+        local LocalData = require(game:GetService("ReplicatedStorage").Client.Framework.Services.LocalData)
+        local Data = LocalData:Get()
+        local Coins = tonumber(Data.Coins)
+        if Coins > getgenv().AutoFarmCoinsLimit then
+            return false
+        end
+        return true
+    end
+    
+    local function checkAndUsePot()
+        
+    end
+    AutoFarmCoins:OnChanged(function(State)
+        getgenv().AutoFarmCoins = State
+        while getgenv().AutoFarmCoins == true do
+            if not getgenv().AutoFarmCoins == true then return end
+            task.wait()
+            if checkCoins() then
+                
+            end
+        end
     end)
 
 end
