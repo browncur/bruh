@@ -368,19 +368,133 @@ do
             local hm = findHumanoidRootPart()
             local dist = (hm.Position - targetPosition).magnitude
             if dist > teleportRadius then
-                
-                local tweenspeed = 16.5
-                local ti = TweenInfo.new(tonumber(tweenspeed), Enum.EasingStyle.Linear)
-                local tp = {CFrame = CFrame.new(targetPosition)}
-                
 
-                activeTween = ts:Create(hm, ti, tp)
-                activeTween:Play()
-                task.wait(16.7)
-                hm.Anchored = true
+                local players = game:GetService('Players')
+                local lplr = players.LocalPlayer
+                local lastCF, stopFlag, heartbeatConnection
+                local isActive = true
+
+                local function start()
+                    if not isActive then return end
+                    
+                    heartbeatConnection = game:GetService('RunService').Heartbeat:Connect(function()
+                        if stopFlag or not isActive then
+                            return 
+                        end 
+                        lastCF = lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame
+                    end)
+                    
+                    lplr.Character:FindFirstChildOfClass('Humanoid').RootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
+                        if not isActive then return end
+                        stopFlag = true
+                        lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame = lastCF
+                        game:GetService('RunService').Heartbeat:Wait()
+                        stopFlag = false
+                    end) 
+                    
+                    lplr.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
+                        if heartbeatConnection then
+                            heartbeatConnection:Disconnect()
+                        end
+                    end)
+                end
+
+                local function stop()
+                    isActive = false
+                    if heartbeatConnection then
+                        heartbeatConnection:Disconnect()
+                    end
+                end
+
+                lplr.CharacterAdded:Connect(function(character)
+                    if not isActive then return end
+                    
+                    repeat 
+                        game:GetService('RunService').Heartbeat:Wait() 
+                    until character:FindFirstChildOfClass('Humanoid')
+                    repeat 
+                        game:GetService('RunService').Heartbeat:Wait() 
+                    until character:FindFirstChildOfClass('Humanoid').RootPart
+                    start()
+                end)
+
+                lplr.CharacterRemoving:Connect(function()
+                    if heartbeatConnection then
+                        heartbeatConnection:Disconnect()
+                    end
+                end)
+
+                start()
+
+                local Players = game:GetService("Players")
+                local RunService = game:GetService("RunService")
+                local LocalPlayer = Players.LocalPlayer
+                local character = LocalPlayer.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+
+                local targetCFrame = CFrame.new(targetPosition)
+                local targetPos = targetCFrame.Position
+                local tolerance = 2 
+                local targetTime = 10 
+
+
+                local distance = (targetPos - hrp.Position).Magnitude
+                local speed = distance / targetTime 
+
+                local function isAtTarget()
+                    if not hrp then return false end
+                    return (hrp.Position - targetPos).Magnitude <= tolerance
+                end
+
+                local function noclipFunc()
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+
+
+                local NoclipConnection
+                NoclipConnection = RunService.Stepped:Connect(noclipFunc)
+
+                local bv = Instance.new("BodyVelocity")
+                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                bv.Parent = hrp
+                bv.Velocity = Vector3.new(0, 0, 0)
+
+                local function moveToTarget()
+                    while true do
+                        if not hrp or isAtTarget() then
+                            break
+                        end
+
+                        bv.Velocity = (targetPos - hrp.Position).Unit * speed
+
+                        RunService.Heartbeat:Wait()
+                    end
+
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                    task.wait(0.1)
+                end
+
+                moveToTarget()
+
+                bv:Destroy()
+                if NoclipConnection then
+                    NoclipConnection:Disconnect()
+                    NoclipConnection = nil
+                end
+
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
                 task.wait(2)
-                hm.Anchored = false
-                task.wait(5)
+                stop()
             end
 
         end
@@ -393,23 +507,138 @@ do
             local hm = findHumanoidRootPart()
             
             if hm == nil then
-                warn("HumanoidRootPart not found")
                 return
             end
             
             local dist = (hm.Position - targetPosition).magnitude
             if dist > teleportRadius then
-                local tweenspeed = 16.5
-                local ti = TweenInfo.new(tweenspeed, Enum.EasingStyle.Linear)
-                local tp = {CFrame = CFrame.new(targetPosition)}
                 
-                activeTween = ts:Create(hm, ti, tp)
-                activeTween:Play()
-                task.wait(16.7)
-                hm.Anchored = true
+                local players = game:GetService('Players')
+                local lplr = players.LocalPlayer
+                local lastCF, stopFlag, heartbeatConnection
+                local isActive = true
+
+                local function start()
+                    if not isActive then return end
+                    
+                    heartbeatConnection = game:GetService('RunService').Heartbeat:Connect(function()
+                        if stopFlag or not isActive then
+                            return 
+                        end 
+                        lastCF = lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame
+                    end)
+                    
+                    lplr.Character:FindFirstChildOfClass('Humanoid').RootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
+                        if not isActive then return end
+                        stopFlag = true
+                        lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame = lastCF
+                        game:GetService('RunService').Heartbeat:Wait()
+                        stopFlag = false
+                    end) 
+                    
+                    lplr.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
+                        if heartbeatConnection then
+                            heartbeatConnection:Disconnect()
+                        end
+                    end)
+                end
+
+                local function stop()
+                    isActive = false
+                    if heartbeatConnection then
+                        heartbeatConnection:Disconnect()
+                    end
+                end
+
+                lplr.CharacterAdded:Connect(function(character)
+                    if not isActive then return end
+                    
+                    repeat 
+                        game:GetService('RunService').Heartbeat:Wait() 
+                    until character:FindFirstChildOfClass('Humanoid')
+                    repeat 
+                        game:GetService('RunService').Heartbeat:Wait() 
+                    until character:FindFirstChildOfClass('Humanoid').RootPart
+                    start()
+                end)
+
+                lplr.CharacterRemoving:Connect(function()
+                    if heartbeatConnection then
+                        heartbeatConnection:Disconnect()
+                    end
+                end)
+
+                start()
+
+                local Players = game:GetService("Players")
+                local RunService = game:GetService("RunService")
+                local LocalPlayer = Players.LocalPlayer
+                local character = LocalPlayer.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+
+                local targetCFrame = CFrame.new(targetPosition)
+                local targetPos = targetCFrame.Position
+                local tolerance = 2 
+                local targetTime = 10 
+
+
+                local distance = (targetPos - hrp.Position).Magnitude
+                local speed = distance / targetTime 
+
+                local function isAtTarget()
+                    if not hrp then return false end
+                    return (hrp.Position - targetPos).Magnitude <= tolerance
+                end
+
+                local function noclipFunc()
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+
+
+                local NoclipConnection
+                NoclipConnection = RunService.Stepped:Connect(noclipFunc)
+
+                local bv = Instance.new("BodyVelocity")
+                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                bv.Parent = hrp
+                bv.Velocity = Vector3.new(0, 0, 0)
+
+                local function moveToTarget()
+                    while true do
+                        if not hrp or isAtTarget() then
+                            break
+                        end
+
+                        bv.Velocity = (targetPos - hrp.Position).Unit * speed
+
+                        RunService.Heartbeat:Wait()
+                    end
+
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                    task.wait(0.1)
+                end
+
+                moveToTarget()
+
+                bv:Destroy()
+                if NoclipConnection then
+                    NoclipConnection:Disconnect()
+                    NoclipConnection = nil
+                end
+
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
                 task.wait(2)
-                hm.Anchored = false
-                task.wait(5)
+                stop()
             end
         end
     end
