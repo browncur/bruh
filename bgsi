@@ -104,6 +104,7 @@ end)()
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 
 
@@ -352,22 +353,15 @@ do
     end)
 
 
-
-    local speed = 2500 -- Set this lower to make it slower
-    local bodyvelocityenabled = false -- Set this to false if you are getting kicked
-    local teleportRadius = 50
-
-    local activeTween = nil 
-
+    local teleportRadius = 25
+    getgenv().TryingToTeleport = false
     local function moveToPart(enemy)
         if character ~= nil then
-            local ts = game:GetService("TweenService")
-            
             local targetPosition = Vector3.new(enemy.Position.X+5, enemy.Position.Y + 10, enemy.Position.Z)
             
             local hm = findHumanoidRootPart()
             local dist = (hm.Position - targetPosition).magnitude
-            if dist > teleportRadius then
+            if dist > teleportRadius and getgenv().TryingToTeleport == false then
 
                 local players = game:GetService('Players')
                 local lplr = players.LocalPlayer
@@ -423,7 +417,7 @@ do
                         heartbeatConnection:Disconnect()
                     end
                 end)
-
+                getgenv().TryingToTeleport = true
                 start()
 
                 local Players = game:GetService("Players")
@@ -495,6 +489,8 @@ do
                 end
                 task.wait(2)
                 stop()
+                task.wait(3)
+                getgenv().TryingToTeleport = false
             end
 
         end
@@ -502,7 +498,6 @@ do
 
     local function moveToSavedCoord()
         if character ~= nil then
-            local ts = game:GetService("TweenService")
             local targetPosition = getgenv().SavedPosition
             local hm = findHumanoidRootPart()
             
@@ -511,7 +506,7 @@ do
             end
             
             local dist = (hm.Position - targetPosition).magnitude
-            if dist > teleportRadius then
+            if dist > teleportRadius and getgenv().TryingToTeleport == false then
                 
                 local players = game:GetService('Players')
                 local lplr = players.LocalPlayer
@@ -567,7 +562,7 @@ do
                         heartbeatConnection:Disconnect()
                     end
                 end)
-
+                getgenv().TryingToTeleport = true
                 start()
 
                 local Players = game:GetService("Players")
@@ -639,6 +634,8 @@ do
                 end
                 task.wait(2)
                 stop()
+                task.wait(3)
+                getgenv().TryingToTeleport = false
             end
         end
     end
@@ -737,19 +734,34 @@ do
 
     local AutoOpenEggs = Tabs.Eggs:CreateToggle("Auto Open Eggs", {Title = "Auto Open Selected Egg", Default = false, Description = ""})
 
+    local function checkRadiusForEgg()
+        local Radius = 20
+        local Generic = workspace.Rendered and Workspace.Rendered.Generic
+        local Egg = Generic and Generic:FindFirstChild(EggsDropDown.Value)
+        if Egg then
+            if Egg:GetAttribute("Size") ~= nil then
+                local HumanoidRootPart = findHumanoidRootPart()
+                local Distance = (HumanoidRootPart.Position - Egg.PrimaryPart.Position).Magnitude
+                if Distance <= Radius then
+                    return true
+                end
+            end
+        end
+        return false
+    end
     AutoOpenEggs:OnChanged(function(state)
         getgenv().AutoOpenEggs = state
         while getgenv().AutoOpenEggs do
-            task.wait(0.1)
-
-            local args = {
-                [1] = "HatchEgg",
-                [2] = EggsDropDown.Value,
-                [3] = getgenv().AmountOfEggs
-            }
-            
-            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
-            
+            task.wait(0.01)
+            if checkRadiusForEgg() then
+                local args = {
+                    [1] = "HatchEgg",
+                    [2] = EggsDropDown.Value,
+                    [3] = getgenv().AmountOfEggs
+                }
+                
+                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
+            end
         end
     end)
 
@@ -1191,8 +1203,8 @@ do
                 if nearestIsland then
                     local hm = findHumanoidRootPart()
                     if nearestChest and hm then
-                        moveToPart(nearestIsland)
                         getgenv().TryingToOpenRiftChest = true
+                        moveToPart(nearestIsland)
                     end
                 end
             end
