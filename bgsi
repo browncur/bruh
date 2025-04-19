@@ -1742,7 +1742,7 @@ do
             task.wait(5)
             local Coins = checkCoins()
             if Coins < getgenv().AutoFarmCoinsLimit then
-                if getgenv().FarminCoins = true then
+                if getgenv().FarminCoins == true then
                     pcall(checkAndUsePot)
                     getgenv().FarminCoins = true
                     moveToCoord(coordForTp)
