@@ -1716,6 +1716,25 @@ do
         local LocalData = require(game:GetService("ReplicatedStorage").Client.Framework.Services.LocalData)
         local Data = LocalData:Get()
         local ActivePotion = Data.ActivePotions
+        local ActiveBuffs = Data.ActiveBuffs
+        local checker = false
+        for i, v in pairs(ActiveBuffs) do
+            if type(v) == "table" then
+                for o, p in pairs(v) do
+                    if tostring(p) == "GoldRush" then
+                        checker = true
+                    end
+                end
+            end
+        end
+        
+        if checker == false then
+            local args = {
+                [1] = "UseGoldenOrb"
+            }
+            
+            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))            
+        end
 
         if ActivePotion and ActivePotion.Coins and ActivePotion.Coins.Active and tonumber(ActivePotion.Coins.Active.Level) == CoinPotionToUse then
             CoinPotionToUse = CoinPotionToUse
