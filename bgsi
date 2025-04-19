@@ -974,10 +974,12 @@ do
                         getgenv().TryingToOpenRiftChest = true
                         local args = {
                             [1] = "UnlockRiftChest",
-                            [2] = nearestChest
+                            [2] = nearestChest,
+                            [3] = false
                         }
                         
                         game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
+                        
                     end
                 else
                     getgenv().TryingToOpenRiftChest = false
