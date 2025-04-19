@@ -795,6 +795,15 @@ do
                         rnenemyname = string.gsub(rnenemyname, "(%a)(%w*)", function(first, rest) 
                             return first:upper() .. rest:lower() 
                         end)
+                    if rnenemyname == "Event 1" or rnenemyname == "Event 2" then
+                        if rnenemyname == "Event 1" then
+                            rnenemyname = "Bunny Egg"
+                        end
+
+                        if rnenemyname == "Event 2" then
+                            rnenemyname = "Pastel Egg"
+                        end
+                    end
                     local partforteleport = enemy:FindFirstChild("Decoration")
                     if partforteleport then
                         local partforteleport2 = partforteleport:FindFirstChild("Meshes/floatingisland1_Circle.003")
