@@ -943,7 +943,6 @@ do
                 if nearestEgg ~= nil then
                     if getgenv().TryingToOpenRiftChest == false then
                     getgenv().TryingToOpenRiftEgg = true
-                    print(nearestEgg)
                     local args = {
                         [1] = "HatchEgg",
                         [2] = nearestEgg,
