@@ -622,6 +622,151 @@ do
             end
         end
     end
+
+
+    local function moveToCoord(position)
+        if character ~= nil then
+            local targetPosition = position
+            local hm = findHumanoidRootPart()
+            
+            if hm == nil then
+                return
+            end
+            
+            local dist = (hm.Position - targetPosition).magnitude
+            if dist > teleportRadius and getgenv().TryingToTeleport == false then
+                
+                local players = game:GetService('Players')
+                local lplr = players.LocalPlayer
+                local lastCF, stopFlag, heartbeatConnection
+                local isActive = true
+
+                local function start()
+                    if not isActive then return end
+                    
+                    heartbeatConnection = game:GetService('RunService').Heartbeat:Connect(function()
+                        if stopFlag or not isActive then
+                            return 
+                        end 
+                        lastCF = lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame
+                    end)
+                    
+                    lplr.Character:FindFirstChildOfClass('Humanoid').RootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
+                        if not isActive then return end
+                        stopFlag = true
+                        lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame = lastCF
+                        game:GetService('RunService').Heartbeat:Wait()
+                        stopFlag = false
+                    end) 
+                    
+                    lplr.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
+                        if heartbeatConnection then
+                            heartbeatConnection:Disconnect()
+                        end
+                    end)
+                end
+
+                local function stop()
+                    isActive = false
+                    if heartbeatConnection then
+                        heartbeatConnection:Disconnect()
+                    end
+                end
+
+                lplr.CharacterAdded:Connect(function(character)
+                    if not isActive then return end
+                    
+                    repeat 
+                        game:GetService('RunService').Heartbeat:Wait() 
+                    until character:FindFirstChildOfClass('Humanoid')
+                    repeat 
+                        game:GetService('RunService').Heartbeat:Wait() 
+                    until character:FindFirstChildOfClass('Humanoid').RootPart
+                    start()
+                end)
+
+                lplr.CharacterRemoving:Connect(function()
+                    if heartbeatConnection then
+                        heartbeatConnection:Disconnect()
+                    end
+                end)
+                getgenv().TryingToTeleport = true
+                start()
+
+                local Players = game:GetService("Players")
+                local RunService = game:GetService("RunService")
+                local LocalPlayer = Players.LocalPlayer
+                local character = LocalPlayer.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+
+                local targetCFrame = CFrame.new(targetPosition)
+                local targetPos = targetCFrame.Position
+                local tolerance = 2 
+                local targetTime = 16
+
+
+                local distance = (targetPos - hrp.Position).Magnitude
+                local speed = distance / targetTime 
+
+                local function isAtTarget()
+                    if not hrp then return false end
+                    return (hrp.Position - targetPos).Magnitude <= tolerance
+                end
+
+                local function noclipFunc()
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+
+
+                local NoclipConnection
+                NoclipConnection = RunService.Stepped:Connect(noclipFunc)
+
+                local bv = Instance.new("BodyVelocity")
+                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                bv.Parent = hrp
+                bv.Velocity = Vector3.new(0, 0, 0)
+
+                local function moveToTarget()
+                    while true do
+                        if not hrp or isAtTarget() then
+                            break
+                        end
+
+                        bv.Velocity = (targetPos - hrp.Position).Unit * speed
+
+                        RunService.Heartbeat:Wait()
+                    end
+
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                    task.wait(0.1)
+                end
+
+                moveToTarget()
+
+                bv:Destroy()
+                if NoclipConnection then
+                    NoclipConnection:Disconnect()
+                    NoclipConnection = nil
+                end
+
+                for _, part in ipairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
+                task.wait(2)
+                stop()
+                task.wait(3)
+                getgenv().TryingToTeleport = false
+            end
+        end
+    end
     
 
     local savedPositionString = readfile(PositionfolderPath)
@@ -908,7 +1053,7 @@ do
                 local nearestIsland = findNearestIsland()
                 if getgenv().TryingToOpenRiftChest == false then
                     local hm = findHumanoidRootPart()
-                    if nearestIsland  and hm then
+                    if nearestIsland  and hm and getgenv().FarminCoins == false then
                         moveToPart(nearestIsland)
 
                     end
@@ -951,7 +1096,7 @@ do
                     task.wait()
                     local nearestIsland = findNearestIsland()
                     local hm = findHumanoidRootPart()
-                    if nearestIsland == nil and getgenv().TryingToOpenRiftEgg == false and getgenv().TryingToOpenRiftChest == false and hm then
+                    if nearestIsland == nil and getgenv().TryingToOpenRiftEgg == false and getgenv().TryingToOpenRiftChest == false and hm and getgenv().FarminCoins == false then
                         moveToSavedCoord()
                         getgenv().TryingToOpenRiftEgg = false
                     end
@@ -1205,7 +1350,7 @@ do
 
                 if nearestIsland then
                     local hm = findHumanoidRootPart()
-                    if nearestChest and hm then
+                    if nearestChest and hm and getgenv().FarminCoins == false then
                         getgenv().TryingToOpenRiftChest = true
                         moveToPart(nearestIsland)
                     end
@@ -1252,7 +1397,7 @@ do
                     task.wait()
                     local nearestIsland = findNearestIslandForChest()
                     local hm = findHumanoidRootPart()
-                    if nearestIsland == nil and getgenv().TryingToOpenRiftEgg == false and getgenv().TryingToOpenRiftChest == false and hm then
+                    if nearestIsland == nil and getgenv().TryingToOpenRiftEgg == false and getgenv().TryingToOpenRiftChest == false and hm and getgenv().FarminCoins == false then
                         getgenv().TryingToOpenRiftChest = false
                         moveToSavedCoord()
                         getgenv().TryingToOpenRiftChest = false
@@ -1538,7 +1683,7 @@ do
     end)
 
     getgenv().AutoFarmCoinsLimit = 1
-    local AutoFarmCoinsLimit = Tabs.Eggs:CreateInput("Amount Of Coins Limit", {
+    local AutoFarmCoinsLimit = Tabs.Farm:CreateInput("Amount Of Coins Limit", {
         Title = "Amount Of Coins For Auto Farm",
         Default = 100000000000, 
         Description = "",
@@ -1548,31 +1693,68 @@ do
             getgenv().AutoFarmCoinsLimit = tonumber(Value)
         end
     })
+    local CoinPotionToUse = nil
+    local CoinPotionDropdown = Tabs.Farm:CreateDropdown("Coin Potion List", {Title = "Select Potion For Auto Use", Description = "1 - COINS I, 6 - COINS EVOLVED", Values = {1, 2, 3, 4, 5, 6}, Multi = false, Default = 1,})
+    CoinPotionDropdown:OnChanged(function(Value)
+        CoinPotionToUse = Value
+    end)
+
     AutoFarmCoinsLimit:OnChanged(function(Value)
         getgenv().AutoFarmCoinsLimit = tonumber(Value)
     end)
 
-    local AutoFarmCoins = Tabs.Farm:CreateToggle("AutoFarmCoins", {Title = "Auto Farm Coins if less than Selected Amount", Default = false, Description = "MUST ENABLE AUTO COLLECT"})
+    local AutoFarmCoins = Tabs.Farm:CreateToggle("AutoFarmCoins", {Title = "Auto Farm Coins if less than 500 Million (FARMING UNTIL SELECTED AMOUNT)", Default = false, Description = "MUST ENABLE AUTO COLLECT"})
     local function checkCoins()
         local LocalData = require(game:GetService("ReplicatedStorage").Client.Framework.Services.LocalData)
         local Data = LocalData:Get()
         local Coins = tonumber(Data.Coins)
-        if Coins > getgenv().AutoFarmCoinsLimit then
-            return false
-        end
-        return true
+        return Coins
     end
+
     
     local function checkAndUsePot()
-        
+        local LocalData = require(game:GetService("ReplicatedStorage").Client.Framework.Services.LocalData)
+        local Data = LocalData:Get()
+        local ActivePotion = Data.ActivePotions
+
+        if ActivePotion and ActivePotion.Coins and ActivePotion.Coins.Active and tonumber(ActivePotion.Coins.Active.Level) == CoinPotionToUse then
+            CoinPotionToUse = CoinPotionToUse
+        else
+            local args = {
+                [1] = "UsePotion",
+                [2] = "Coins",
+                [3] = tonumber(CoinPotionToUse)
+            }
+            
+            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args)) 
+        end
     end
+    
+    local coordForTp = Vector3.new(-46.28042984008789, 15971.724609375, 15.993919372558594)
+    getgenv().FarminCoins = false
     AutoFarmCoins:OnChanged(function(State)
         getgenv().AutoFarmCoins = State
+        if State == false then
+            getgenv().FarminCoins = false
+        end
         while getgenv().AutoFarmCoins == true do
             if not getgenv().AutoFarmCoins == true then return end
-            task.wait()
-            if checkCoins() then
-                
+            task.wait(5)
+            local Coins = checkCoins()
+            if Coins < getgenv().AutoFarmCoinsLimit then
+                if getgenv().FarminCoins = true then
+                    pcall(checkAndUsePot)
+                    getgenv().FarminCoins = true
+                    moveToCoord(coordForTp)
+                end
+                if Coins < 500000000 then
+                    pcall(checkAndUsePot)
+                    getgenv().FarminCoins = true
+                    moveToCoord(coordForTp)
+                end
+            elseif getgenv().FarminCoins == true and Coins >= getgenv().AutoFarmCoinsLimit then
+                getgenv().FarminCoins = false
+                moveToSavedCoord()
             end
         end
     end)
