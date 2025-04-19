@@ -227,7 +227,7 @@ do
         getgenv().AutoBlowBubble = State
         while getgenv().AutoBlowBubble == true do
             if not getgenv().AutoBlowBubble == true then return end
-            task.wait(0.01)
+            task.wait(0.1)
             local args = {
                 [1] = "BlowBubble"
             }
@@ -369,14 +369,14 @@ do
             local dist = (hm.Position - targetPosition).magnitude
             if dist > teleportRadius then
                 
-                local tweenspeed = 10
+                local tweenspeed = 16.5
                 local ti = TweenInfo.new(tonumber(tweenspeed), Enum.EasingStyle.Linear)
                 local tp = {CFrame = CFrame.new(targetPosition)}
                 
 
                 activeTween = ts:Create(hm, ti, tp)
                 activeTween:Play()
-                task.wait(10.5)
+                task.wait(16.7)
                 hm.Anchored = true
                 task.wait(2)
                 hm.Anchored = false
@@ -399,13 +399,13 @@ do
             
             local dist = (hm.Position - targetPosition).magnitude
             if dist > teleportRadius then
-                local tweenspeed = 10
+                local tweenspeed = 16.5
                 local ti = TweenInfo.new(tweenspeed, Enum.EasingStyle.Linear)
                 local tp = {CFrame = CFrame.new(targetPosition)}
                 
                 activeTween = ts:Create(hm, ti, tp)
                 activeTween:Play()
-                task.wait(10.5)
+                task.wait(16.7)
                 hm.Anchored = true
                 task.wait(2)
                 hm.Anchored = false
@@ -511,7 +511,7 @@ do
     AutoOpenEggs:OnChanged(function(state)
         getgenv().AutoOpenEggs = state
         while getgenv().AutoOpenEggs do
-            task.wait(0.01)
+            task.wait(0.1)
 
             local args = {
                 [1] = "HatchEgg",
@@ -689,7 +689,7 @@ do
 
             coroutine.wrap(function()
                 while getgenv().AutoOpenRiftEggs == true do
-                    task.wait()
+                    task.wait(0.1)
                     OpenNearestEgg()
                 end
             end)()
