@@ -1543,7 +1543,7 @@ do
         Content = nil
     })
 
-    local PetsDropdown = Tabs.Enchants:CreateDropdown("Pets Dropdown", {Title = "Select Pet For Auto Reroll Enchant", Description = "", Values = petslist, Multi = false, Default = ""})
+    local PetsDropdown = Tabs.Enchants:CreateDropdown("Pets Dropdown", {Title = "Select Pet For Auto Reroll Enchant", Description = "", Values = petslist, Multi = false,Searchable = true , Default = ""})
     
     local EnchantsDropdown = Tabs.Enchants:CreateDropdown("Enchants Dropdown", {Title = "Select Enchants For Auto Reroll", Description = "Allows Multi", Values = EnchantList, Multi = true, Default = {}})
     
