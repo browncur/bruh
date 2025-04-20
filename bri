@@ -312,9 +312,9 @@ do
             if not getgenv().AutoCollectPlayTimeRewards == true then return end
             task.wait(10)
             for i = 1, 13 do
-                task.wait(1)
+                task.wait(2)
                 local args = {
-                    [1] = 1
+                    [1] = i
                 }
                 
                 game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("GiftService"):WaitForChild("RF"):WaitForChild("CollectGift"):InvokeServer(unpack(args))
