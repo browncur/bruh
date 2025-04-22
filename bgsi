@@ -2020,7 +2020,7 @@ end
 local function handleHatchEvent(eventType, data)
     if eventType == "HatchEgg" and typeof(data) == "table" and data.Pets then
         for i, pet in ipairs(data.Pets) do
-            if typeof(pet) == "table" and pet.Pet and pet.Pet.Name and table.find(getgenv().SELECTED_PETS, tostring(pet.Pet.Name)) then
+            if typeof(pet) == "table" and pet.Pet and pet.Pet.Name and table.find(getgenv().SELECTED_PETS, tostring(pet.Pet.Name)) and pet.Deleted == false then
                 sendWebhook(pet.Pet)
             end
         end
