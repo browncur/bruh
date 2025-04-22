@@ -1784,268 +1784,275 @@ do
         end
     end)
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local HttpService = game:GetService("HttpService")
-    local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
-    local Pets = ReplicatedStorage.Shared:FindFirstChild("Data") and require(ReplicatedStorage.Shared.Data.Pets)
-    local LocalDataService = ReplicatedStorage.Client:FindFirstChild("Framework") and require(ReplicatedStorage.Client.Framework.Services.LocalData)
+local Pets = ReplicatedStorage.Shared:FindFirstChild("Data") and require(ReplicatedStorage.Shared.Data.Pets)
+local LocalDataService = ReplicatedStorage.Client:FindFirstChild("Framework") and require(ReplicatedStorage.Client.Framework.Services.LocalData)
 
-    if not (Pets and LocalDataService) then
-        warn("ERROR")
-        return
-    end
+if not (Pets and LocalDataService) then
+    warn("ERROR: Pets or LocalDataService not found")
+    return
+end
 
-    -- Инициализация переменных
-    getgenv().WEBHOOK_URL = ""
-    getgenv().DISCORD_USER_ID = ""
-    getgenv().SELECTED_RARITIES = {}
-    getgenv().EMBED_COLOR = 0xFF69B4
+-- Инициализация переменных
+getgenv().WEBHOOK_URL = ""
+getgenv().DISCORD_USER_ID = ""
+getgenv().SELECTED_RARITIES = {}
+getgenv().SELECTED_PETS = {}
+getgenv().EMBED_COLOR = 0xFF69B4
 
-    -- UI компоненты
-    local DiscorUserId = Tabs.Eggs:CreateInput("DiscorUserId", {
-        Title = "Discor User Id",
-        Default = 0,
-        Description = "Your Discrod User Id",
-        Numeric = false,
-        Finished = false,
-        Callback = function(Value)
-            getgenv().DISCORD_USER_ID = tostring(Value)
-        end
-    })
-    DiscorUserId:OnChanged(function(Value)
+-- UI компоненты
+local DiscorUserId = Tabs.Eggs:CreateInput("DiscorUserId", {
+    Title = "Discord User Id",
+    Default = 0,
+    Description = "Your Discord User Id",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
         getgenv().DISCORD_USER_ID = tostring(Value)
-    end)
+    end
+})
+DiscorUserId:OnChanged(function(Value)
+    getgenv().DISCORD_USER_ID = tostring(Value)
+end)
 
-    local WebhookLink = Tabs.Eggs:CreateInput("WebhookLink", {
-        Title = "Webhook Link",
-        Default = 0,
-        Description = "Your webhook link",
-        Numeric = false,
-        Finished = false,
-        Callback = function(Value)
-            getgenv().WEBHOOK_URL = tostring(Value)
-        end
-    })
-    WebhookLink:OnChanged(function(Value)
+local WebhookLink = Tabs.Eggs:CreateInput("WebhookLink", {
+    Title = "Webhook Link",
+    Default = 0,
+    Description = "Your webhook link",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
         getgenv().WEBHOOK_URL = tostring(Value)
-    end)
+    end
+})
+WebhookLink:OnChanged(function(Value)
+    getgenv().WEBHOOK_URL = tostring(Value)
+end)
 
-    local RaritiesDropdown = Tabs.Eggs:CreateDropdown("RaritiesDropdown", {
-        Title = "Select Rarity For Webhook",
-        Description = "",
-        Values = {"Common", "Unique", "Rare", "Epic", "Legendary", "Secret"},
-        Searchable = true,
-        Multi = true,
-        Default = {}
-    })
-    local SelectedPets = {}
-    local function updateSelectedPets()
-        SelectedPets = {}
-        for name, pet in pairs(Pets) do
-            if table.find(getgenv().SELECTED_RARITIES, pet.Rarity) then
-                table.insert(SelectedPets, name)
-            end
+local RaritiesDropdown = Tabs.Eggs:CreateDropdown("RaritiesDropdown", {
+    Title = "Select Rarity For Webhook",
+    Description = "",
+    Values = {"Common", "Unique", "Rare", "Epic", "Legendary", "Secret"},
+    Searchable = true,
+    Multi = true,
+    Default = {}
+})
+local SelectedPets = {}
+local function updateSelectedPets()
+    getgenv().SELECTED_PETS = {}
+    for name, pet in pairs(Pets) do
+        if table.find(getgenv().SELECTED_RARITIES, tostring(pet.Rarity)) then
+            table.insert(getgenv().SELECTED_PETS, name)
         end
     end
-    RaritiesDropdown:OnChanged(function(Value)
-        getgenv().SELECTED_RARITIES = Value
-        updateSelectedPets()
-    end)
-    
-    local webhookToggle = Tabs.Eggs:CreateToggle("webhookToggle", {Title = "Send Webhooks", Description = "", Default = false})
-
-    local function convertToShorter(number, type)
-        if type == "seconds" then
-            local hours = math.floor(number / 3600)
-            local minutes = math.floor((number % 3600) / 60)
-            local seconds = number % 60
-            return string.format("%dh %dm %ds", hours, minutes, seconds)
-        elseif type == "hatches" then
-            if number < 1000 then
-                return tostring(number)
-            elseif number < 1000000 then
-                return string.format("%.2fk", number / 1000)
-            else
-                return string.format("%.2fm", number / 1000000)
-            end
-        elseif type == "bubbles" then
-            if number < 1000000 then
-                return tostring(number)
-            elseif number < 1000000000 then
-                return string.format("%.2fm", number / 1000000)
-            else
-                return string.format("%.2fb", number / 1000000000)
-            end
-        end
-        return tostring(number)
+end
+RaritiesDropdown:OnChanged(function(Value)
+    getgenv().SELECTED_RARITIES = {}
+    for i, v in Value do
+        table.insert(getgenv().SELECTED_RARITIES, i)
     end
+    updateSelectedPets()
+    print(#getgenv().SELECTED_RARITIES, #getgenv().SELECTED_PETS)
+end)
 
-    local function getPlayerStats()
-        local playerData = LocalDataService:Get() or {}
-        local gems = playerData.Gems or 0
-        local stats = playerData.Stats or {}
-        local pets = playerData.Pets or {}
+local webhookToggle = Tabs.Eggs:CreateToggle("webhookToggle", {Title = "Send Webhooks", Description = "", Default = false})
 
-        return {
-            playTime = convertToShorter(stats.Playtime or 0, "seconds"),
-            hatches = convertToShorter(stats.Hatches or 0, "hatches"),
-            bubbles = convertToShorter(stats.Bubbles or 0, "bubbles"),
-            gems = convertToShorter(gems, "bubbles"),
-        }
-    end
-
-    local function getImageThumbnail(assetId)
-        local assetIdNumber = assetId:match("rbxassetid://(%d+)")
-        if not assetIdNumber then
-            warn("Error: not right assetId")
-            return nil
-        end
-
-        local url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. assetIdNumber .. "&size=420x420&format=png&isCircular=false"
-        local request = http_request or request or HttpPost or syn.request
-        if not request then
-            warn("Error: HTTP")
-            return nil
-        end
-
-        local success, response = pcall(function()
-            return request({
-                Url = url,
-                Method = "GET",
-                Headers = {["Content-Type"] = "application/json"}
-            }).Body
-        end)
-
-        if success then
-            local data = HttpService:JSONDecode(response)
-            return data and data.data and data.data[1] and data.data[1].imageUrl or nil
+local function convertToShorter(number, type)
+    if type == "seconds" then
+        local hours = math.floor(number / 3600)
+        local minutes = math.floor((number % 3600) / 60)
+        local seconds = number % 60
+        return string.format("%dh %dm %ds", hours, minutes, seconds)
+    elseif type == "hatches" then
+        if number < 1000 then
+            return tostring(number)
+        elseif number < 1000000 then
+            return string.format("%.2fk", number / 1000)
         else
-            warn("Error at picture:", response)
+            return string.format("%.2fm", number / 1000000)
         end
+    elseif type == "bubbles" then
+        if number < 1000000 then
+            return tostring(number)
+        elseif number < 1000000000 then
+            return string.format("%.2fm", number / 1000000)
+        else
+            return string.format("%.2fb", number / 1000000000)
+        end
+    end
+    return tostring(number)
+end
 
+local function getPlayerStats()
+    local playerData = LocalDataService:Get() or {}
+    local gems = playerData.Gems or 0
+    local stats = playerData.Stats or {}
+    local pets = playerData.Pets or {}
+
+    return {
+        playTime = convertToShorter(stats.Playtime or 0, "seconds"),
+        hatches = convertToShorter(stats.Hatches or 0, "hatches"),
+        bubbles = convertToShorter(stats.Bubbles or 0, "bubbles"),
+        gems = convertToShorter(gems, "bubbles"),
+    }
+end
+
+local function getImageThumbnail(assetId)
+    local assetIdNumber = assetId:match("rbxassetid://(%d+)")
+    if not assetIdNumber then
+        warn("Error: Invalid assetId format")
         return nil
     end
 
-    local function sendWebhook(petData)
-        -- Проверка на валидность WEBHOOK_URL и DISCORD_USER_ID
-        if getgenv().WEBHOOK_URL == "" or getgenv().DISCORD_USER_ID == "" then
-            warn("Error: WEBHOOK_URL or DISCORD_USER_ID is not set")
-            return
-        end
-
-        local petInfo = Pets[petData.Name]
-        if not petInfo then
-            warn("Error: info not found")
-            return
-        end
-
-        local player = Players.LocalPlayer
-        local stats = getPlayerStats()
-        local imageUrl = petInfo.Images and petInfo.Images.Normal and getImageThumbnail(petInfo.Images.Normal)
-
-        local embed = {
-            title = tostring(petInfo.Rarity).." Pet Hatched!",
-            description = "**"..player.Name.."**" .. " hatched "..tostring(petInfo.Rarity).." pet!",
-            color = getgenv().EMBED_COLOR,
-            fields = {
-                {name = "Pet Name 🏷️", value = petData.Name, inline = true},
-                {name = "Rarity 🥚", value = petInfo.Rarity or "❌", inline = true},
-                {name = "Shiny ✨", value = petData.Shiny and "✅" or "❌", inline = true},
-                {name = "Mythic 🟣", value = petData.Mythic and "✅" or "❌", inline = true},
-                {
-                    name = "User Stats",
-                    value = string.format(
-                        "Gems 💎: %s\nHatches 🥚: %s\nBubbles 🫧: %s",
-                        stats.gems, stats.hatches, stats.bubbles
-                    ),
-                    inline = false
-                }
-            },
-            footer = {
-                text = os.date("%Y-%m-%d %H:%M:%S")
-            },
-            thumbnail = imageUrl and {url = imageUrl} or nil
-        }
-
-        if petInfo.Stats then
-            local statsText = ""
-            for stat, value in pairs(petInfo.Stats) do
-                if stat == "Bubbles" then
-                    statsText = statsText .. stat .. " 🫧: " .. tostring(value) .. "\n"
-                elseif stat == "Coins" then
-                    statsText = statsText .. stat .. " 🪙: " .. tostring(value) .. "\n"
-                elseif stat == "Gems" then
-                    statsText = statsText .. stat .. " 💎: " .. tostring(value) .. "\n"
-                end
-            end
-            table.insert(embed.fields, {name = "Pet Stats", value = statsText, inline = false})
-        end
-
-        local data = {
-            content = "<@" .. getgenv().DISCORD_USER_ID .. ">",
-            username = "Apel Hub Pet Notifier",
-            avatar_url = "https://cdn.discordapp.com/avatars/414681006973386752/a_902d08360dfb7d7c2df774ab608848f6.gif?size=1024&width=640&height=640",
-            embeds = {embed}
-        }
-
-        local request = http_request or request or HttpPost or syn.request
-        if not request then
-            warn("Error: HTTP request function not available")
-            return
-        end
-
-        local success, response = pcall(function()
-            return request({
-                Url = getgenv().WEBHOOK_URL,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode(data)
-            })
-        end)
-
-        if not success then
-            warn("Error sending webhook:", response)
-        end
+    local url = "https://thumbnails.roblox.com/v1/assets?assetIds=" .. assetIdNumber .. "&size=420x420&format=png&isCircular=false"
+    local request = http_request or request or HttpPost or syn.request
+    if not request then
+        warn("Error: HTTP request function not available")
+        return nil
     end
 
-    local function handleHatchEvent(eventType, data)
-        if eventType == "HatchEgg" and typeof(data) == "table" and data.Pets then
-            for _, pet in ipairs(data.Pets) do
-                if typeof(pet) == "table" and pet.Pet and pet.Pet.Name and table.find(SelectedPets, pet.Pet.Name) then
-                    sendWebhook(pet.Pet)
-                end
-            end
-        end
-    end
-
-    local connection = nil
-
-    webhookToggle:OnChanged(function(State)
-        if State then
-            -- Включение вебхуков
-            local remoteEvent = ReplicatedStorage.Shared:FindFirstChild("Framework") and 
-                ReplicatedStorage.Shared.Framework.Network:FindFirstChild("Remote") and 
-                ReplicatedStorage.Shared.Framework.Network.Remote:FindFirstChild("Event")
-
-            if not remoteEvent then
-                warn("Error: RemoteEvent not found")
-                return
-            end
-
-            if not connection then
-                connection = remoteEvent.OnClientEvent:Connect(handleHatchEvent)
-                print("Webhook notifications enabled")
-            end
-        else
-            if connection then
-                connection:Disconnect()
-                connection = nil
-                print("Webhook notifications disabled")
-            end
-        end
+    local success, response = pcall(function()
+        return request({
+            Url = url,
+            Method = "GET",
+            Headers = {["Content-Type"] = "application/json"}
+        }).Body
     end)
 
+    if success then
+        local data = HttpService:JSONDecode(response)
+        return data and data.data and data.data[1] and data.data[1].imageUrl or nil
+    else
+        warn("Error fetching thumbnail:", response)
+    end
 
+    return nil
+end
+
+local function sendWebhook(petData)
+    if getgenv().WEBHOOK_URL == "" or getgenv().DISCORD_USER_ID == "" then
+        warn("Error: WEBHOOK_URL or DISCORD_USER_ID is not set")
+        return
+    end
+
+    local petInfo = Pets[petData.Name]
+    if not petInfo then
+        warn("Error: Pet info not found for", petData.Name)
+        return
+    end
+
+    print("Preparing webhook for pet:", petData.Name)
+
+    local player = Players.LocalPlayer
+    local stats = getPlayerStats()
+    local imageUrl = petInfo.Images and petInfo.Images.Normal and getImageThumbnail(petInfo.Images.Normal)
+
+    local embed = {
+        title = tostring(petInfo.Rarity).." Pet Hatched!",
+        description = "**"..player.Name.."** hatched "..tostring(petInfo.Rarity).." pet!",
+        color = getgenv().EMBED_COLOR,
+        fields = {
+            {name = "Pet Name 🏷️", value = petData.Name, inline = true},
+            {name = "Rarity 🥚", value = petInfo.Rarity or "❌", inline = true},
+            {name = "Shiny ✨", value = petData.Shiny and "✅" or "❌", inline = true},
+            {name = "Mythic 🟣", value = petData.Mythic and "✅" or "❌", inline = true},
+            {
+                name = "User Stats",
+                value = string.format(
+                    "Gems 💎: %s\nHatches 🥚: %s\nBubbles 🫧: %s",
+                    stats.gems, stats.hatches, stats.bubbles
+                ),
+                inline = false
+            }
+        },
+        footer = {
+            text = os.date("%Y-%m-%d %H:%M:%S")
+        },
+        thumbnail = imageUrl and {url = imageUrl} or nil
+    }
+
+    if petInfo.Stats then
+        local statsText = ""
+        for stat, value in pairs(petInfo.Stats) do
+            if stat == "Bubbles" then
+                statsText = statsText .. stat .. " 🫧: " .. tostring(value) .. "\n"
+            elseif stat == "Coins" then
+                statsText = statsText .. stat .. " 🪙: " .. tostring(value) .. "\n"
+            elseif stat == "Gems" then
+                statsText = statsText .. stat .. " 💎: " .. tostring(value) .. "\n"
+            end
+        end
+        table.insert(embed.fields, {name = "Pet Stats", value = statsText, inline = false})
+    end
+
+    local data = {
+        content = "<@" .. getgenv().DISCORD_USER_ID .. ">",
+        username = "Apel Hub Pet Notifier",
+        avatar_url = "https://cdn.discordapp.com/avatars/414681006973386752/a_902d08360dfb7d7c2df774ab608848f6.gif?size=1024&width=640&height=640",
+        embeds = {embed}
+    }
+
+    local request = http_request or request or HttpPost or syn.request
+    if not request then
+        warn("Error: HTTP request function not available")
+        return
+    end
+
+    print("Sending webhook to:", getgenv().WEBHOOK_URL)
+    local success, response = pcall(function()
+        return request({
+            Url = getgenv().WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode(data)
+        })
+    end)
+
+    if not success then
+        warn("Error sending webhook:", response)
+    else
+        print("Webhook sent successfully")
+    end
+end
+
+local function handleHatchEvent(eventType, data)
+    if eventType == "HatchEgg" and typeof(data) == "table" and data.Pets then
+        for i, pet in ipairs(data.Pets) do
+            if typeof(pet) == "table" and pet.Pet and pet.Pet.Name and table.find(getgenv().SELECTED_PETS, tostring(pet.Pet.Name)) then
+                sendWebhook(pet.Pet)
+            end
+        end
+    end
+end
+
+local connection = nil
+
+webhookToggle:OnChanged(function(State)
+    print("webhookToggle changed, State:", State)
+    if State then
+        local remoteEvent = ReplicatedStorage.Shared:FindFirstChild("Framework") and 
+            ReplicatedStorage.Shared.Framework.Network:FindFirstChild("Remote") and 
+            ReplicatedStorage.Shared.Framework.Network.Remote:FindFirstChild("Event")
+
+        if not remoteEvent then
+            warn("Error: RemoteEvent not found")
+            return
+        end
+
+        if not connection then
+            connection = remoteEvent.OnClientEvent:Connect(handleHatchEvent)
+            print("Webhook notifications enabled")
+        end
+    else
+        if connection then
+            connection:Disconnect()
+            connection = nil
+            print("Webhook notifications disabled")
+        end
+    end
+end)
 
 end
 
@@ -2060,7 +2067,7 @@ InterfaceManager:SetFolder("Apel Hub")
 SaveManager:SetFolder("Apel Hub/".."Bubble Gum")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
-SaveManager:LoadAutoloadConfig()
+--SaveManager:LoadAutoloadConfig()
 
 local Menu = game:GetService("CoreGui"):FindFirstChild("Menu")
 if Menu then
