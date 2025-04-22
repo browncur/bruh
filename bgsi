@@ -1107,14 +1107,20 @@ do
 
     end)
 
-    Tabs.Eggs:CreateButton({
-        Title = "Auto Cancel Open Animation",
-        Description = "",
-        Callback = function()
-            local ClientHatchEgg = require(game:GetService('ReplicatedStorage').Client.Effects.HatchEgg)
-            ClientHatchEgg.Play = function() return end
+    local AnimationsToggle = Tabs.Eggs:CreateToggle("AnimationsToggle", {Title = "Auto Cancel Open Animation", Description = "", Default = false})
+    AnimationsToggle:OnChanged(function(state)
+        getgenv().AnimationsToggle = state
+    end)
+
+    local ClientHatchEgg = require(game:GetService('ReplicatedStorage').Client.Effects.HatchEgg)
+
+    local oldAnimations
+    oldAnimations = hookfunction(ClientHatchEgg.Play, function(...)
+        if getgenv().AnimationsToggle then
+            return true
         end
-    })
+        return oldAnimations(...)
+    end)
 
     local function unlockAllIslands()
         for i, v in pairs(workspace.Worlds["The Overworld"].Islands:GetDescendants()) do
