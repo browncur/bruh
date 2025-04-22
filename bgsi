@@ -2067,7 +2067,7 @@ InterfaceManager:SetFolder("Apel Hub")
 SaveManager:SetFolder("Apel Hub/".."Bubble Gum")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
---SaveManager:LoadAutoloadConfig()
+SaveManager:LoadAutoloadConfig()
 
 local Menu = game:GetService("CoreGui"):FindFirstChild("Menu")
 if Menu then
