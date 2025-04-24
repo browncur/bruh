@@ -989,15 +989,20 @@ do
 
         
                         local checkname = rnenemyname
-                    if rnenemyname == "Event 1" or rnenemyname == "Event 2" then
-                        if rnenemyname == "Event 1" then
-                            checkname = "Bunny Egg"
+                        if rnenemyname == "Event 1" or rnenemyname == "Event 2" or rnenemyname == "Event 3" then
+                            if rnenemyname == "Event 1" then
+                                checkname = "Bunny Egg"
+                            end
+    
+                            if rnenemyname == "Event 2" then
+                                checkname = "Pastel Egg"
+                            end
+    
+                            if rnenemyname == "Event 3" then
+                                checkname = "Throwback Egg"
+                            end
                         end
-
-                        if rnenemyname == "Event 2" then
-                            checkname = "Pastel Egg"
-                        end
-                    end
+    
 
 
 
