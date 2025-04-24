@@ -922,44 +922,46 @@ do
     local RiftFolder = workspace.Rendered.Rifts
 
     local function findNearestIsland()
-        local closestIsland = nil
-        local closestDistance = math.huge
+        local highestLuckIsland = nil
+        local highestLuckValue = -math.huge
         local rootPart = findHumanoidRootPart()
-
+    
         local SelectedIslands = RiftEggsDropDown:GetSelectedValues()
         if #SelectedIslands > 0 then
             for _, enemy in pairs(RiftFolder:GetDescendants()) do
                 if enemy:IsA("Model") then
                     local rnenemyname = enemy.Name
-                        rnenemyname = string.gsub(rnenemyname, "-", " ")
-                        rnenemyname = string.gsub(rnenemyname, "(%a)(%w*)", function(first, rest) 
-                            return first:upper() .. rest:lower() 
-                        end)
+                    rnenemyname = string.gsub(rnenemyname, "-", " ")
+                    rnenemyname = string.gsub(rnenemyname, "(%a)(%w*)", function(first, rest) 
+                        return first:upper() .. rest:lower() 
+                    end)
                     local checkname = rnenemyname
                     if rnenemyname == "Event 1" or rnenemyname == "Event 2" or rnenemyname == "Event 3" then
                         if rnenemyname == "Event 1" then
                             checkname = "Bunny Egg"
-                        end
-
-                        if rnenemyname == "Event 2" then
+                        elseif rnenemyname == "Event 2" then
                             checkname = "Pastel Egg"
-                        end
-
-                        if rnenemyname == "Event 3" then
+                        elseif rnenemyname == "Event 3" then
                             checkname = "Throwback Egg"
                         end
                     end
-
-                    local partforteleport = enemy:FindFirstChild("Decoration")
-                    if partforteleport then
-                        local partforteleport2 = partforteleport:FindFirstChild("Meshes/floatingisland1_Circle.003")
-                        if partforteleport2 and rootPart then
-                            if partforteleport2.Position and rootPart.Position then
-                                local distance = (rootPart.Position - partforteleport2.Position).Magnitude
-                    
-                                if containsValue(checkname, SelectedIslands) and distance < closestDistance then
-                                    closestDistance = distance
-                                    closestIsland = partforteleport2
+    
+                    if containsValue(checkname, SelectedIslands) then
+                        local display = enemy:FindFirstChild("Display")
+                        local surfaceGui = display and display:FindFirstChild("SurfaceGui")
+                        local icon = surfaceGui and surfaceGui:FindFirstChild("Icon")
+                        local luckLabel = icon and icon:FindFirstChild("Luck")
+    
+                        if luckLabel and luckLabel:IsA("TextLabel") then
+                            local luckText = luckLabel.Text
+                            local luckValue = tonumber(string.match(luckText, "x(%d+)"))
+                            
+                            if luckValue and luckValue > highestLuckValue then
+                                highestLuckValue = luckValue
+                                local partforteleport = enemy:FindFirstChild("Decoration")
+                                local partforteleport2 = partforteleport and partforteleport:FindFirstChild("Meshes/floatingisland1_Circle.003")
+                                if partforteleport2 then
+                                    highestLuckIsland = partforteleport2
                                 end
                             end
                         end
@@ -967,9 +969,8 @@ do
                 end
             end
         end
-
     
-        return closestIsland
+        return highestLuckIsland
     end
 
     local function findNearestEgg()
@@ -1044,11 +1045,6 @@ do
         getgenv().AutoOpenRiftEggs = state
             if getgenv().AutoOpenRiftEgg == false then
                 getgenv().TryingToOpenRiftEgg = false
-                if activeTween then
-                    task.wait(1)
-                    activeTween:Cancel()  -- Stop the active tween
-                    activeTween = nil      -- Reset the active tween variable
-                end
             end
 
             coroutine.wrap(function()
