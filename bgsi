@@ -2190,17 +2190,19 @@ do
     local function deleteSelectedPets()
         local player = game:GetService("Players").LocalPlayer
         local petsFolder = player:FindFirstChild("Pets")
-        for i, v in petsFolder:GetChildren() do
-            local namecheck = v:GetAttribute("Name")
-            if table.find(getgenv().SELECTED_PETS2, namecheck) then
-                local args = {
-                    [1] = "DeletePet",
-                    [2] = tostring(v),
-                    [3] = 1000,
-                    [4] = false
-                }
-                
-                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
+        if petsFolder then
+            for i, v in petsFolder:GetChildren() do
+                local namecheck = v:GetAttribute("Name")
+                if table.find(getgenv().SELECTED_PETS2, namecheck) then
+                    local args = {
+                        [1] = "DeletePet",
+                        [2] = tostring(v),
+                        [3] = 1000,
+                        [4] = false
+                    }
+                    
+                    game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
+                end
             end
         end
     end
