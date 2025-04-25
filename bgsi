@@ -1427,13 +1427,20 @@ do
     AutoClaimGiantChest:OnChanged(function(state)
         getgenv().AutoClaimGiantChest = state
         while getgenv().AutoClaimGiantChest do
-            task.wait(10)
-            local args = {
-                [1] = "ClaimChest",
-                [2] = "Giant Chest"
-            }
-            
-            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))          
+            task.wait(0)
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local LocalData = require(ReplicatedStorage.Client.Framework.Services.LocalData)
+            local Data = LocalData:Get()
+            local Cooldown = Data.Cooldowns["Giant Chest"]
+            local timestamp = os.time()
+            if timestamp>Cooldown then
+                local args = {
+                    [1] = "ClaimChest",
+                    [2] = "Giant Chest"
+                }
+                
+                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))          
+            end
         end
     end)
 
@@ -1442,13 +1449,20 @@ do
     AutoClaimInfinityChest:OnChanged(function(state)
         getgenv().AutoClaimInfinityChest = state
         while getgenv().AutoClaimInfinityChest do
-            task.wait(10)
-            local args = {
-                [1] = "ClaimChest",
-                [2] = "Infinity Chest"
-            }
-            
-            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))          
+            task.wait(0)
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local LocalData = require(ReplicatedStorage.Client.Framework.Services.LocalData)
+            local Data = LocalData:Get()
+            local Cooldown = Data.Cooldowns["Infinity Chest"]
+            local timestamp = os.time()
+            if timestamp>Cooldown then
+                local args = {
+                    [1] = "ClaimChest",
+                    [2] = "Infinity Chest"
+                }
+                
+                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))          
+            end
         end
     end)
 
@@ -1457,13 +1471,20 @@ do
     AutoClaimVoidChest:OnChanged(function(state)
         getgenv().AutoClaimVoidChest = state
         while getgenv().AutoClaimVoidChest do
-            task.wait(10)
-            local args = {
-                [1] = "ClaimChest",
-                [2] = "Void Chest"
-            }
-            
-            game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))          
+            task.wait(0)
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local LocalData = require(ReplicatedStorage.Client.Framework.Services.LocalData)
+            local Data = LocalData:Get()
+            local Cooldown = Data.Cooldowns["Void Chest"]
+            local timestamp = os.time()
+            if timestamp>Cooldown then
+                local args = {
+                    [1] = "ClaimChest",
+                    [2] = "Void Chest"
+                }
+                
+                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))          
+            end
         end
     end)
 
