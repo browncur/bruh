@@ -26,7 +26,7 @@ local Tabs = {
     Eggs = Window:CreateTab({Title = "Eggs", Icon = "egg"}),
     Chests = Window:CreateTab({Title = "Chests", Icon = "box"}),
     AutoBuy = Window:CreateTab({Title = "Auto Buy", Icon = "shopping-cart"}),
-    AutoDelete = Window:CreateTab({Title = "Auto Delete", Icon = ""}),
+    AutoDelete = Window:CreateTab({Title = "Auto Delete", Icon = "trash"}),
     AutoUse = Window:CreateTab({Title = "Auto Use", Icon = "pill-bottle"}),
     Misc = Window:CreateTab({Title = " Misc", Icon = "diamond"}),
     Settings = Window:CreateTab({ Title = "Settings", Icon = "settings" }),
