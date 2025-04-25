@@ -1873,7 +1873,7 @@ do
         Multi = true,
         Default = {}
     })
-    local SelectedPets = {}
+
     local function updateSelectedPets()
         getgenv().SELECTED_PETS = {}
         for name, pet in pairs(Pets) do
@@ -2157,7 +2157,7 @@ do
     end)
     getgenv().SELECTED_RARITIES2 = nil
     getgenv().SELECTED_PETS2 = nil
-    local RaritiesDropdown2 = Tabs.AutoDelete:CreateDropdown("RaritiesDropdown", {
+    local RaritiesDropdown2 = Tabs.AutoDelete:CreateDropdown("RaritiesDropdown2", {
         Title = "Select Rarity For Auto Delete",
         Description = "I RECOMMEND USE THIS ONLY TO CLEAN UR INVENTORY, NOT TO USE IT INSTEAD OF GAME AUTODELETE",
         Values = {"Common", "Unique", "Rare", "Epic"},
