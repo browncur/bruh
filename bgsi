@@ -26,6 +26,7 @@ local Tabs = {
     Eggs = Window:CreateTab({Title = "Eggs", Icon = "egg"}),
     Chests = Window:CreateTab({Title = "Chests", Icon = "box"}),
     AutoBuy = Window:CreateTab({Title = "Auto Buy", Icon = "shopping-cart"}),
+    AutoDelete = Window:CreateTab({Title = "Auto Delete", Icon = ""}),
     AutoUse = Window:CreateTab({Title = "Auto Use", Icon = "pill-bottle"}),
     Misc = Window:CreateTab({Title = " Misc", Icon = "diamond"}),
     Settings = Window:CreateTab({ Title = "Settings", Icon = "settings" }),
@@ -2108,7 +2109,7 @@ do
     
             if shouldUsePotion then
                 useGivenPotion(potionType, potionLevel)
-                task.wait(0.1)
+                task.wait(0.01)
             end
         end
     end
@@ -2127,7 +2128,64 @@ do
             end
         end
     end)
+    getgenv().SELECTED_RARITIES2 = nil
+    getgenv().SELECTED_PETS2 = nil
+    local RaritiesDropdown2 = Tabs.AutoDelete:CreateDropdown("RaritiesDropdown", {
+        Title = "Select Rarity For Auto Delete",
+        Description = "I RECOMMEND USE THIS ONLY TO CLEAN UR INVENTORY, NOT TO USE IT INSTEAD OF GAME AUTODELETE",
+        Values = {"Common", "Unique", "Rare", "Epic"},
+        Searchable = true,
+        Multi = true,
+        Default = {}
+    })
+    local function updateSelectedPets2()
+        getgenv().SELECTED_PETS2 = {}
+        for name, pet in pairs(Pets) do
+            if table.find(getgenv().SELECTED_RARITIES2, tostring(pet.Rarity)) then
+                table.insert(getgenv().SELECTED_PETS2, name)
+            end
+        end
+    end
+    RaritiesDropdown2:OnChanged(function(Value)
+        getgenv().SELECTED_RARITIES2 = {}
+        for i, v in Value do
+            table.insert(getgenv().SELECTED_RARITIES2, i)
+        end
+        updateSelectedPets2()
+        print(#getgenv().SELECTED_RARITIES2, #getgenv().SELECTED_PETS2)
+    end)
 
+    local AutoDeleteToggle = Tabs.AutoDelete:CreateToggle("Auto Delete Pets", {
+        Title = "Enable Auto Delete",
+        Description = "Automatically Delete selected Rarities of pets",
+        Default = false
+    })
+    local function deleteSelectedPets()
+        local player = game:GetService("Players").LocalPlayer
+        local petsFolder = player:FindFirstChild("Pets")
+        for i, v in petsFolder:GetChildren() do
+            local namecheck = v:GetAttribute("Name")
+            if table.find(getgenv().SELECTED_PETS2, namecheck) then
+                local args = {
+                    [1] = "DeletePet",
+                    [2] = tostring(v),
+                    [3] = 1000,
+                    [4] = false
+                }
+                
+                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
+            end
+        end
+    end
+    AutoDeleteToggle:OnChanged(function(value)
+        getgenv().AutoDeleteToggle = value
+        if value then
+            while getgenv().AutoDeleteToggle == true do
+                deleteSelectedPets()
+                task.wait()
+            end
+        end
+    end)
 end
 
 
@@ -2141,7 +2199,7 @@ InterfaceManager:SetFolder("Apel Hub")
 SaveManager:SetFolder("Apel Hub/".."Bubble Gum")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
-SaveManager:LoadAutoloadConfig()
+--SaveManager:LoadAutoloadConfig()
 
 local Menu = game:GetService("CoreGui"):FindFirstChild("Menu")
 if Menu then
