@@ -2106,8 +2106,8 @@ do
         local LocalData = require(game:GetService("ReplicatedStorage").Client.Framework.Services.LocalData)
         local Data = LocalData:Get()
         local ActivePotion = Data.ActivePotions
-    
-        if not PotionsToUse or type(PotionsToUse) ~= "table" then
+        local PotionInventory = Data.Potions
+        if not PotionsToUse or type(PotionsToUse) ~= "table" or not PotionInventory or type(PotionInventory) ~= "table" then
             warn("PotionsToUse is not a valid table:", PotionsToUse)
             return
         end
@@ -2117,7 +2117,7 @@ do
                 warn("Invalid potionString, expected string, got:", type(potionString), potionString)
                 continue
             end
-
+    
             local potionType, potionLevel = potionString:match("^(%a+)%s(%d+)$")
             if not potionType or not potionLevel then
                 warn("Failed to parse potionString:", potionString)
@@ -2133,8 +2133,18 @@ do
                     shouldUsePotion = false
                 end
             end
-    
+
+            local potionFound = false
             if shouldUsePotion then
+                for _, potionData in ipairs(PotionInventory) do
+                    if potionData.Name == potionType and potionData.Level == potionLevel and potionData.Amount > 0 then
+                        potionFound = true
+                        break
+                    end
+                end
+            end
+    
+            if shouldUsePotion and potionFound then
                 useGivenPotion(potionType, potionLevel)
                 task.wait(0.01)
             end
