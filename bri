@@ -78,6 +78,7 @@ end)()
 do
 
     local EnemiesFolder = workspace
+    local EventEnemie = workspace:FindFirstChild("Maps"):FindFirstChild("EventBoss") and workspace:FindFirstChild("Maps"):FindFirstChild("EventBoss"):FindFirstChild("Golden Sahur Boss")
     local Enemies = {}
     local nameSet = {}
 
@@ -91,6 +92,7 @@ do
                 end
             end
         end
+        table.insert(Enemies, EventEnemie.Name)
     end
     
     local EnemyDropdown = Tabs.Farm:CreateDropdown("Enemy", {Title = "Enemy Selector", Description = "Select enemies for farm", Values = Enemies, Multi = true, Searchable = true, Default = {}})
@@ -126,6 +128,7 @@ do
                 end
             end
         end
+        table.insert(Enemies, EventEnemie.Name)
         EnemyDropdown:SetValues(newEnemies)
     end
     local AutoFarmSelectedMobs = Tabs.Farm:CreateToggle("Auto Farm Selected Mobs", {Title = "Auto Farm Selected Mobs", Default = false, Description = ""})
@@ -184,7 +187,14 @@ do
                 end
             end
 
-    
+            if containsValue(EventEnemie.Name, selectedEnemies) and EventEnemie:FindFirstChild("HumanoidRootPart") then
+                local distance = (rootPart.Position - EventEnemie.PrimaryPart.Position).Magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestEnemy = EventEnemie
+                end
+            end
+
         return closestEnemy
     end
 
