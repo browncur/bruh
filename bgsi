@@ -230,7 +230,7 @@ do
         getgenv().AutoBlowBubble = State
         while getgenv().AutoBlowBubble == true do
             if not getgenv().AutoBlowBubble == true then return end
-            task.wait(0.1)
+            task.wait()
             local args = {
                 [1] = "BlowBubble"
             }
