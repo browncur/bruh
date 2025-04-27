@@ -230,7 +230,7 @@ do
         getgenv().AutoBlowBubble = State
         while getgenv().AutoBlowBubble == true do
             if not getgenv().AutoBlowBubble == true then return end
-            task.wait()
+            task.wait(0.1)
             local args = {
                 [1] = "BlowBubble"
             }
@@ -2131,6 +2131,15 @@ do
                 local activeLevel = ActivePotion[potionType].Active.Level
                 if activeLevel and activeLevel == potionLevel then
                     shouldUsePotion = false
+                end
+            end
+
+            if ActivePotion[potionType] and ActivePotion[potionType].Queue then
+                for i, v in ActivePotion[potionType].Queue do
+                    local queueLevel = ActivePotion[potionType].Queue[i].Level
+                    if queueLevel and queueLevel == potionLevel then
+                        shouldUsePotion = false
+                    end
                 end
             end
 
