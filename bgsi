@@ -361,7 +361,7 @@ do
         end
 
         local startPosition = hrp.Position
-        local fixedY = startPosition.Y
+        local fixedY = startPosition.Y+20
         local targetXZ = Vector3.new(enemy.Position.X + offsetX, fixedY, enemy.Position.Z + offsetZ)
         local finalY = enemy.Position.Y + offsetY
         local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
@@ -458,7 +458,7 @@ do
         end
 
         local startPosition = hrp.Position
-        local fixedY = startPosition.Y
+        local fixedY = startPosition.Y + 20
         local targetXZ = Vector3.new(targetPosition.X + offsetX, fixedY, targetPosition.Z + offsetZ)
         local finalY = targetPosition.Y + offsetY
         local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
@@ -554,7 +554,7 @@ do
         end
 
         local startPosition = hrp.Position
-        local fixedY = startPosition.Y
+        local fixedY = startPosition.Y + 20
         local targetXZ = Vector3.new(position.X + offsetX, fixedY, position.Z + offsetZ)
         local finalY = position.Y + offsetY
         local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
