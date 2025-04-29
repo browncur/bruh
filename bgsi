@@ -104,7 +104,6 @@ coroutine.wrap(function()
 	end
 end)()
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
@@ -339,436 +338,303 @@ do
 
 
     local teleportRadius = 25
+    local targetTime = 12
+    local tolerance = 2
+    local offsetX, offsetY, offsetZ = 5, 10, 0
+
+
+    local RunService = game:GetService("RunService")
     getgenv().TryingToTeleport = false
+
     local function moveToPart(enemy)
-        if character ~= nil then
-            local targetPosition = Vector3.new(enemy.Position.X+5, enemy.Position.Y + 10, enemy.Position.Z)
-            
-            local hm = findHumanoidRootPart()
-            local dist = (hm.Position - targetPosition).magnitude
-            if dist > teleportRadius and getgenv().TryingToTeleport == false then
+        if not enemy or not enemy:IsA("BasePart") then
+            warn("Invalid enemy: Must be a BasePart with Position")
+            return
+        end
 
-                local players = game:GetService('Players')
-                local lplr = players.LocalPlayer
-                local lastCF, stopFlag, heartbeatConnection
-                local isActive = true
+        local character = player.Character
+        local hrp = findHumanoidRootPart(character)
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if not character or not hrp or not humanoid then
+            warn("No character, HumanoidRootPart, or Humanoid")
+            return
+        end
 
-                local function start()
-                    if not isActive then return end
-                    
-                    heartbeatConnection = game:GetService('RunService').Heartbeat:Connect(function()
-                        if stopFlag or not isActive then
-                            return 
-                        end 
-                        lastCF = lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame
-                    end)
-                    
-                    lplr.Character:FindFirstChildOfClass('Humanoid').RootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
-                        if not isActive then return end
-                        stopFlag = true
-                        lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame = lastCF
-                        game:GetService('RunService').Heartbeat:Wait()
-                        stopFlag = false
-                    end) 
-                    
-                    lplr.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
-                        if heartbeatConnection then
-                            heartbeatConnection:Disconnect()
-                        end
-                    end)
+        local startPosition = hrp.Position
+        local fixedY = startPosition.Y
+        local targetXZ = Vector3.new(enemy.Position.X + offsetX, fixedY, enemy.Position.Z + offsetZ)
+        local finalY = enemy.Position.Y + offsetY
+        local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
+
+        if distanceXZ <= teleportRadius or getgenv().TryingToTeleport then
+            return
+        end
+
+        getgenv().TryingToTeleport = true
+        local isActive = true
+        local connections = {}
+
+        local function setNoclip(enabled)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not enabled
                 end
-
-                local function stop()
-                    isActive = false
-                    if heartbeatConnection then
-                        heartbeatConnection:Disconnect()
-                    end
-                end
-
-                lplr.CharacterAdded:Connect(function(character)
-                    if not isActive then return end
-                    
-                    repeat 
-                        game:GetService('RunService').Heartbeat:Wait() 
-                    until character:FindFirstChildOfClass('Humanoid')
-                    repeat 
-                        game:GetService('RunService').Heartbeat:Wait() 
-                    until character:FindFirstChildOfClass('Humanoid').RootPart
-                    start()
-                end)
-
-                lplr.CharacterRemoving:Connect(function()
-                    if heartbeatConnection then
-                        heartbeatConnection:Disconnect()
-                    end
-                end)
-                getgenv().TryingToTeleport = true
-                start()
-
-                local Players = game:GetService("Players")
-                local RunService = game:GetService("RunService")
-                local LocalPlayer = Players.LocalPlayer
-                local character = LocalPlayer.Character
-                local hrp = character and character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-
-
-                local targetCFrame = CFrame.new(targetPosition)
-                local targetPos = targetCFrame.Position
-                local tolerance = 2 
-                local targetTime = 18
-
-
-                local distance = (targetPos - hrp.Position).Magnitude
-                local speed = distance / targetTime 
-
-                local function isAtTarget()
-                    if not hrp then return false end
-                    return (hrp.Position - targetPos).Magnitude <= tolerance
-                end
-
-                local function noclipFunc()
-                    for _, part in ipairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-
-
-                local NoclipConnection
-                NoclipConnection = RunService.Stepped:Connect(noclipFunc)
-
-                local bv = Instance.new("BodyVelocity")
-                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-                bv.Parent = hrp
-                bv.Velocity = Vector3.new(0, 0, 0)
-
-                local function moveToTarget()
-                    while true do
-                        if not hrp or isAtTarget() then
-                            break
-                        end
-
-                        bv.Velocity = (targetPos - hrp.Position).Unit * speed
-
-                        RunService.Heartbeat:Wait()
-                    end
-
-                    bv.Velocity = Vector3.new(0, 0, 0)
-                    task.wait(0.1)
-                end
-
-                moveToTarget()
-
-                bv:Destroy()
-                if NoclipConnection then
-                    NoclipConnection:Disconnect()
-                    NoclipConnection = nil
-                end
-
-                for _, part in ipairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-                task.wait(2)
-                stop()
-                task.wait(3)
-                getgenv().TryingToTeleport = false
             end
+        end
 
+        local function cleanup()
+            isActive = false
+            if humanoid then
+                humanoid.PlatformStand = false
+            end
+            if hrp then
+                hrp.Anchored = false
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
+            for _, conn in ipairs(connections) do
+                conn:Disconnect()
+            end
+            setNoclip(false)
+            getgenv().TryingToTeleport = false
+        end
+
+        local success, err = pcall(function()
+            setNoclip(true)
+            humanoid.PlatformStand = true
+
+            local startTime = tick()
+            local duration = targetTime
+
+            table.insert(connections, RunService.Heartbeat:Connect(function(deltaTime)
+                if not isActive or not hrp or not humanoid then
+                    cleanup()
+                    return
+                end
+
+                local elapsed = tick() - startTime
+                local progress = math.clamp(elapsed / duration, 0, 1)
+                local newXZ = Vector3.new(
+                    startPosition.X + (targetXZ.X - startPosition.X) * progress,
+                    fixedY,
+                    startPosition.Z + (targetXZ.Z - startPosition.Z) * progress
+                )
+
+                local currentDistanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
+
+                if currentDistanceXZ <= tolerance or progress >= 1 then
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                    hrp.Anchored = true
+                    hrp.CFrame = CFrame.new(targetXZ.X, finalY, targetXZ.Z)
+                    cleanup()
+                    return
+                end
+
+                hrp.CFrame = CFrame.new(newXZ)
+            end))
+
+            table.insert(connections, humanoid.Died:Connect(cleanup))
+            table.insert(connections, player.CharacterRemoving:Connect(cleanup))
+        end)
+
+        if not success then
+            warn("Error during teleport:", err)
+            cleanup()
         end
     end
 
     local function moveToSavedCoord()
-        if character ~= nil then
-            local targetPosition = getgenv().SavedPosition
-            local hm = findHumanoidRootPart()
-            
-            if hm == nil then
-                return
-            end
-            
-            local dist = (hm.Position - targetPosition).magnitude
-            if dist > teleportRadius and getgenv().TryingToTeleport == false then
-                
-                local players = game:GetService('Players')
-                local lplr = players.LocalPlayer
-                local lastCF, stopFlag, heartbeatConnection
-                local isActive = true
+        local character = player.Character
+        local hrp = findHumanoidRootPart(character)
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if not character or not hrp or not humanoid then
+            warn("No character, HumanoidRootPart, or Humanoid")
+            return
+        end
 
-                local function start()
-                    if not isActive then return end
-                    
-                    heartbeatConnection = game:GetService('RunService').Heartbeat:Connect(function()
-                        if stopFlag or not isActive then
-                            return 
-                        end 
-                        lastCF = lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame
-                    end)
-                    
-                    lplr.Character:FindFirstChildOfClass('Humanoid').RootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
-                        if not isActive then return end
-                        stopFlag = true
-                        lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame = lastCF
-                        game:GetService('RunService').Heartbeat:Wait()
-                        stopFlag = false
-                    end) 
-                    
-                    lplr.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
-                        if heartbeatConnection then
-                            heartbeatConnection:Disconnect()
-                        end
-                    end)
+        local targetPosition = getgenv().SavedPosition
+        if not targetPosition then
+            warn("No saved position found")
+            return
+        end
+
+        local startPosition = hrp.Position
+        local fixedY = startPosition.Y
+        local targetXZ = Vector3.new(targetPosition.X + offsetX, fixedY, targetPosition.Z + offsetZ)
+        local finalY = targetPosition.Y + offsetY
+        local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
+
+        if distanceXZ <= teleportRadius or getgenv().TryingToTeleport then
+            return
+        end
+
+        getgenv().TryingToTeleport = true
+        local isActive = true
+        local connections = {}
+
+        local function setNoclip(enabled)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not enabled
                 end
-
-                local function stop()
-                    isActive = false
-                    if heartbeatConnection then
-                        heartbeatConnection:Disconnect()
-                    end
-                end
-
-                lplr.CharacterAdded:Connect(function(character)
-                    if not isActive then return end
-                    
-                    repeat 
-                        game:GetService('RunService').Heartbeat:Wait() 
-                    until character:FindFirstChildOfClass('Humanoid')
-                    repeat 
-                        game:GetService('RunService').Heartbeat:Wait() 
-                    until character:FindFirstChildOfClass('Humanoid').RootPart
-                    start()
-                end)
-
-                lplr.CharacterRemoving:Connect(function()
-                    if heartbeatConnection then
-                        heartbeatConnection:Disconnect()
-                    end
-                end)
-                getgenv().TryingToTeleport = true
-                start()
-
-                local Players = game:GetService("Players")
-                local RunService = game:GetService("RunService")
-                local LocalPlayer = Players.LocalPlayer
-                local character = LocalPlayer.Character
-                local hrp = character and character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-
-
-                local targetCFrame = CFrame.new(targetPosition)
-                local targetPos = targetCFrame.Position
-                local tolerance = 2 
-                local targetTime = 16
-
-
-                local distance = (targetPos - hrp.Position).Magnitude
-                local speed = distance / targetTime 
-
-                local function isAtTarget()
-                    if not hrp then return false end
-                    return (hrp.Position - targetPos).Magnitude <= tolerance
-                end
-
-                local function noclipFunc()
-                    for _, part in ipairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-
-
-                local NoclipConnection
-                NoclipConnection = RunService.Stepped:Connect(noclipFunc)
-
-                local bv = Instance.new("BodyVelocity")
-                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-                bv.Parent = hrp
-                bv.Velocity = Vector3.new(0, 0, 0)
-
-                local function moveToTarget()
-                    while true do
-                        if not hrp or isAtTarget() then
-                            break
-                        end
-
-                        bv.Velocity = (targetPos - hrp.Position).Unit * speed
-
-                        RunService.Heartbeat:Wait()
-                    end
-
-                    bv.Velocity = Vector3.new(0, 0, 0)
-                    task.wait(0.1)
-                end
-
-                moveToTarget()
-
-                bv:Destroy()
-                if NoclipConnection then
-                    NoclipConnection:Disconnect()
-                    NoclipConnection = nil
-                end
-
-                for _, part in ipairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-                task.wait(2)
-                stop()
-                task.wait(3)
-                getgenv().TryingToTeleport = false
             end
         end
-    end
 
+        local function cleanup()
+            isActive = false
+            if humanoid then
+                humanoid.PlatformStand = false
+            end
+            if hrp then
+                hrp.Anchored = false
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
+            for _, conn in ipairs(connections) do
+                conn:Disconnect()
+            end
+            setNoclip(false)
+            getgenv().TryingToTeleport = false
+        end
+
+        local success, err = pcall(function()
+            setNoclip(true)
+            humanoid.PlatformStand = true
+
+            local startTime = tick()
+            local duration = targetTime
+
+            table.insert(connections, RunService.Heartbeat:Connect(function(deltaTime)
+                if not isActive or not hrp or not humanoid then
+                    cleanup()
+                    return
+                end
+
+                local elapsed = tick() - startTime
+                local progress = math.clamp(elapsed / duration, 0, 1)
+                local newXZ = Vector3.new(
+                    startPosition.X + (targetXZ.X - startPosition.X) * progress,
+                    fixedY,
+                    startPosition.Z + (targetXZ.Z - startPosition.Z) * progress
+                )
+
+                local currentDistanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
+
+                if currentDistanceXZ <= tolerance or progress >= 1 then
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                    hrp.Anchored = true
+                    hrp.CFrame = CFrame.new(targetXZ.X, finalY, targetXZ.Z)
+                    cleanup()
+                    return
+                end
+
+                hrp.CFrame = CFrame.new(newXZ)
+            end))
+
+            table.insert(connections, humanoid.Died:Connect(cleanup))
+            table.insert(connections, player.CharacterRemoving:Connect(cleanup))
+        end)
+
+        if not success then
+            warn("Error during teleport:", err)
+            cleanup()
+        end
+    end
 
     local function moveToCoord(position)
-        if character ~= nil then
-            local targetPosition = position
-            local hm = findHumanoidRootPart()
-            
-            if hm == nil then
-                return
-            end
-            
-            local dist = (hm.Position - targetPosition).magnitude
-            if dist > teleportRadius and getgenv().TryingToTeleport == false then
-                
-                local players = game:GetService('Players')
-                local lplr = players.LocalPlayer
-                local lastCF, stopFlag, heartbeatConnection
-                local isActive = true
+        local character = player.Character
+        local hrp = findHumanoidRootPart(character)
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if not character or not hrp or not humanoid then
+            warn("No character, HumanoidRootPart, or Humanoid")
+            return
+        end
 
-                local function start()
-                    if not isActive then return end
-                    
-                    heartbeatConnection = game:GetService('RunService').Heartbeat:Connect(function()
-                        if stopFlag or not isActive then
-                            return 
-                        end 
-                        lastCF = lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame
-                    end)
-                    
-                    lplr.Character:FindFirstChildOfClass('Humanoid').RootPart:GetPropertyChangedSignal('CFrame'):Connect(function()
-                        if not isActive then return end
-                        stopFlag = true
-                        lplr.Character:FindFirstChildOfClass('Humanoid').RootPart.CFrame = lastCF
-                        game:GetService('RunService').Heartbeat:Wait()
-                        stopFlag = false
-                    end) 
-                    
-                    lplr.Character:FindFirstChildOfClass('Humanoid').Died:Connect(function()
-                        if heartbeatConnection then
-                            heartbeatConnection:Disconnect()
-                        end
-                    end)
+        if not position then
+            warn("No position provided")
+            return
+        end
+
+        local startPosition = hrp.Position
+        local fixedY = startPosition.Y
+        local targetXZ = Vector3.new(position.X + offsetX, fixedY, position.Z + offsetZ)
+        local finalY = position.Y + offsetY
+        local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
+
+        if distanceXZ <= teleportRadius or getgenv().TryingToTeleport then
+            return
+        end
+
+        getgenv().TryingToTeleport = true
+        local isActive = true
+        local connections = {}
+
+        local function setNoclip(enabled)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not enabled
                 end
-
-                local function stop()
-                    isActive = false
-                    if heartbeatConnection then
-                        heartbeatConnection:Disconnect()
-                    end
-                end
-
-                lplr.CharacterAdded:Connect(function(character)
-                    if not isActive then return end
-                    
-                    repeat 
-                        game:GetService('RunService').Heartbeat:Wait() 
-                    until character:FindFirstChildOfClass('Humanoid')
-                    repeat 
-                        game:GetService('RunService').Heartbeat:Wait() 
-                    until character:FindFirstChildOfClass('Humanoid').RootPart
-                    start()
-                end)
-
-                lplr.CharacterRemoving:Connect(function()
-                    if heartbeatConnection then
-                        heartbeatConnection:Disconnect()
-                    end
-                end)
-                getgenv().TryingToTeleport = true
-                start()
-
-                local Players = game:GetService("Players")
-                local RunService = game:GetService("RunService")
-                local LocalPlayer = Players.LocalPlayer
-                local character = LocalPlayer.Character
-                local hrp = character and character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-
-
-                local targetCFrame = CFrame.new(targetPosition)
-                local targetPos = targetCFrame.Position
-                local tolerance = 2 
-                local targetTime = 16
-
-
-                local distance = (targetPos - hrp.Position).Magnitude
-                local speed = distance / targetTime 
-
-                local function isAtTarget()
-                    if not hrp then return false end
-                    return (hrp.Position - targetPos).Magnitude <= tolerance
-                end
-
-                local function noclipFunc()
-                    for _, part in ipairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-
-
-                local NoclipConnection
-                NoclipConnection = RunService.Stepped:Connect(noclipFunc)
-
-                local bv = Instance.new("BodyVelocity")
-                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-                bv.Parent = hrp
-                bv.Velocity = Vector3.new(0, 0, 0)
-
-                local function moveToTarget()
-                    while true do
-                        if not hrp or isAtTarget() then
-                            break
-                        end
-
-                        bv.Velocity = (targetPos - hrp.Position).Unit * speed
-
-                        RunService.Heartbeat:Wait()
-                    end
-
-                    bv.Velocity = Vector3.new(0, 0, 0)
-                    task.wait(0.1)
-                end
-
-                moveToTarget()
-
-                bv:Destroy()
-                if NoclipConnection then
-                    NoclipConnection:Disconnect()
-                    NoclipConnection = nil
-                end
-
-                for _, part in ipairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-                task.wait(2)
-                stop()
-                task.wait(3)
-                getgenv().TryingToTeleport = false
             end
         end
+
+        local function cleanup()
+            isActive = false
+            if humanoid then
+                humanoid.PlatformStand = false
+            end
+            if hrp then
+                hrp.Anchored = false
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
+            for _, conn in ipairs(connections) do
+                conn:Disconnect()
+            end
+            setNoclip(false)
+            getgenv().TryingToTeleport = false
+        end
+
+        local success, err = pcall(function()
+            setNoclip(true)
+            humanoid.PlatformStand = true
+
+            local startTime = tick()
+            local duration = targetTime
+
+            table.insert(connections, RunService.Heartbeat:Connect(function(deltaTime)
+                if not isActive or not hrp or not humanoid then
+                    cleanup()
+                    return
+                end
+
+                local elapsed = tick() - startTime
+                local progress = math.clamp(elapsed / duration, 0, 1)
+                local newXZ = Vector3.new(
+                    startPosition.X + (targetXZ.X - startPosition.X) * progress,
+                    fixedY,
+                    startPosition.Z + (targetXZ.Z - startPosition.Z) * progress
+                )
+
+                local currentDistanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
+
+                if currentDistanceXZ <= tolerance or progress >= 1 then
+                    hrp.Velocity = Vector3.new(0, 0, 0)
+                    hrp.Anchored = true
+                    hrp.CFrame = CFrame.new(targetXZ.X, finalY, targetXZ.Z)
+                    cleanup()
+                    return
+                end
+
+                hrp.CFrame = CFrame.new(newXZ)
+            end))
+
+            table.insert(connections, humanoid.Died:Connect(cleanup))
+            table.insert(connections, player.CharacterRemoving:Connect(cleanup))
+        end)
+
+        if not success then
+            warn("Error during teleport:", err)
+            cleanup()
+        end
     end
+
     
 
     local savedPositionString = readfile(PositionfolderPath)
@@ -2247,7 +2113,7 @@ InterfaceManager:SetFolder("Apel Hub")
 SaveManager:SetFolder("Apel Hub/".."Bubble Gum")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
-SaveManager:LoadAutoloadConfig()
+--SaveManager:LoadAutoloadConfig()
 
 local Menu = game:GetService("CoreGui"):FindFirstChild("Menu")
 if Menu then
