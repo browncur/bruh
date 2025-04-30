@@ -338,7 +338,7 @@ do
 
 
     local teleportRadius = 25
-    local teleportSpeed = 39
+    local teleportSpeed = 37
     local tolerance = 2
     local offsetX, offsetY, offsetZ = 5, 10, 0
 
