@@ -338,13 +338,23 @@ do
 
 
     local teleportRadius = 25
-    local targetTime = 12
+    local teleportSpeed = 42
     local tolerance = 2
     local offsetX, offsetY, offsetZ = 5, 10, 0
 
-
     local RunService = game:GetService("RunService")
     getgenv().TryingToTeleport = false
+    local player = game.Players.LocalPlayer
+    local function findHumanoidRootPart()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character then
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                return rootPart
+            end
+        end
+    end
 
     local function moveToPart(enemy)
         if not enemy or not enemy:IsA("BasePart") then
@@ -361,7 +371,7 @@ do
         end
 
         local startPosition = hrp.Position
-        local fixedY = startPosition.Y+20
+        local fixedY = startPosition.Y - 70
         local targetXZ = Vector3.new(enemy.Position.X + offsetX, fixedY, enemy.Position.Z + offsetZ)
         local finalY = enemy.Position.Y + offsetY
         local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
@@ -403,7 +413,7 @@ do
             humanoid.PlatformStand = true
 
             local startTime = tick()
-            local duration = targetTime
+            local duration = distanceXZ / teleportSpeed
 
             table.insert(connections, RunService.Heartbeat:Connect(function(deltaTime)
                 if not isActive or not hrp or not humanoid then
@@ -441,6 +451,7 @@ do
             cleanup()
         end
     end
+
 
     local function moveToSavedCoord()
         local character = player.Character
@@ -450,27 +461,27 @@ do
             warn("No character, HumanoidRootPart, or Humanoid")
             return
         end
-
+    
         local targetPosition = getgenv().SavedPosition
         if not targetPosition then
             warn("No saved position found")
             return
         end
-
+    
         local startPosition = hrp.Position
-        local fixedY = startPosition.Y + 20
+        local fixedY = startPosition.Y - 70
         local targetXZ = Vector3.new(targetPosition.X + offsetX, fixedY, targetPosition.Z + offsetZ)
         local finalY = targetPosition.Y + offsetY
         local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
-
+    
         if distanceXZ <= teleportRadius or getgenv().TryingToTeleport then
             return
         end
-
+    
         getgenv().TryingToTeleport = true
         local isActive = true
         local connections = {}
-
+    
         local function setNoclip(enabled)
             for _, part in ipairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -478,7 +489,7 @@ do
                 end
             end
         end
-
+    
         local function cleanup()
             isActive = false
             if humanoid then
@@ -494,20 +505,20 @@ do
             setNoclip(false)
             getgenv().TryingToTeleport = false
         end
-
+    
         local success, err = pcall(function()
             setNoclip(true)
             humanoid.PlatformStand = true
-
+    
             local startTime = tick()
-            local duration = targetTime
-
+            local duration = distanceXZ / teleportSpeed -- Calculate duration based on speed
+    
             table.insert(connections, RunService.Heartbeat:Connect(function(deltaTime)
                 if not isActive or not hrp or not humanoid then
                     cleanup()
                     return
                 end
-
+    
                 local elapsed = tick() - startTime
                 local progress = math.clamp(elapsed / duration, 0, 1)
                 local newXZ = Vector3.new(
@@ -515,9 +526,9 @@ do
                     fixedY,
                     startPosition.Z + (targetXZ.Z - startPosition.Z) * progress
                 )
-
+    
                 local currentDistanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
-
+    
                 if currentDistanceXZ <= tolerance or progress >= 1 then
                     hrp.Velocity = Vector3.new(0, 0, 0)
                     hrp.Anchored = true
@@ -525,20 +536,20 @@ do
                     cleanup()
                     return
                 end
-
+    
                 hrp.CFrame = CFrame.new(newXZ)
             end))
-
+    
             table.insert(connections, humanoid.Died:Connect(cleanup))
             table.insert(connections, player.CharacterRemoving:Connect(cleanup))
         end)
-
+    
         if not success then
             warn("Error during teleport:", err)
             cleanup()
         end
     end
-
+    
     local function moveToCoord(position)
         local character = player.Character
         local hrp = findHumanoidRootPart(character)
@@ -547,26 +558,26 @@ do
             warn("No character, HumanoidRootPart, or Humanoid")
             return
         end
-
+    
         if not position then
             warn("No position provided")
             return
         end
-
+    
         local startPosition = hrp.Position
-        local fixedY = startPosition.Y + 20
+        local fixedY = startPosition.Y - 70
         local targetXZ = Vector3.new(position.X + offsetX, fixedY, position.Z + offsetZ)
         local finalY = position.Y + offsetY
         local distanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
-
+    
         if distanceXZ <= teleportRadius or getgenv().TryingToTeleport then
             return
         end
-
+    
         getgenv().TryingToTeleport = true
         local isActive = true
         local connections = {}
-
+    
         local function setNoclip(enabled)
             for _, part in ipairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -574,7 +585,7 @@ do
                 end
             end
         end
-
+    
         local function cleanup()
             isActive = false
             if humanoid then
@@ -590,20 +601,20 @@ do
             setNoclip(false)
             getgenv().TryingToTeleport = false
         end
-
+    
         local success, err = pcall(function()
             setNoclip(true)
             humanoid.PlatformStand = true
-
+    
             local startTime = tick()
-            local duration = targetTime
-
+            local duration = distanceXZ / teleportSpeed -- Calculate duration based on speed
+    
             table.insert(connections, RunService.Heartbeat:Connect(function(deltaTime)
                 if not isActive or not hrp or not humanoid then
                     cleanup()
                     return
                 end
-
+    
                 local elapsed = tick() - startTime
                 local progress = math.clamp(elapsed / duration, 0, 1)
                 local newXZ = Vector3.new(
@@ -611,9 +622,9 @@ do
                     fixedY,
                     startPosition.Z + (targetXZ.Z - startPosition.Z) * progress
                 )
-
+    
                 local currentDistanceXZ = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(targetXZ.X, 0, targetXZ.Z)).Magnitude
-
+    
                 if currentDistanceXZ <= tolerance or progress >= 1 then
                     hrp.Velocity = Vector3.new(0, 0, 0)
                     hrp.Anchored = true
@@ -621,14 +632,14 @@ do
                     cleanup()
                     return
                 end
-
+    
                 hrp.CFrame = CFrame.new(newXZ)
             end))
-
+    
             table.insert(connections, humanoid.Died:Connect(cleanup))
             table.insert(connections, player.CharacterRemoving:Connect(cleanup))
         end)
-
+    
         if not success then
             warn("Error during teleport:", err)
             cleanup()
