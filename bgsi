@@ -759,7 +759,7 @@ do
     AutoOpenEggs:OnChanged(function(state)
         getgenv().AutoOpenEggs = state
         while getgenv().AutoOpenEggs do
-            task.wait()
+            task.wait(0.01)
             if checkRadiusForEgg() then
                 local args = {
                     [1] = "HatchEgg",
@@ -768,6 +768,7 @@ do
                 }
                         
                 game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))        
+                task.wait(0.05)
             end
         end
     end)
