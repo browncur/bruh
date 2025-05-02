@@ -759,24 +759,17 @@ do
     AutoOpenEggs:OnChanged(function(state)
         getgenv().AutoOpenEggs = state
         while getgenv().AutoOpenEggs do
-            task.wait()
+            task.wait(0.01)
             if checkRadiusForEgg() then
-                local Cooldown = tonumber(player:GetAttribute("NextEggOpenAt")) or 0
-                local timestamp = os.time()
-                if timestamp then
-                    if timestamp>Cooldown then
-                        local args = {
-                            [1] = "HatchEgg",
-                            [2] = EggsDropDown.Value,
-                            [3] = getgenv().AmountOfEggs
-                        }
-                        
-                        game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))        
-                    end
-                    if Cooldown == nil or not Cooldown then
-                        player:SetAttribute("NextEggOpenAt", 0)
-                    end
-                end
+                
+                local args = {
+                    [1] = "HatchEgg",
+                    [2] = EggsDropDown.Value,
+                    [3] = getgenv().AmountOfEggs
+                }
+                
+                game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))
+            
             end
         end
     end)
