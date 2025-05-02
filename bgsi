@@ -838,8 +838,8 @@ do
                             
                             if luckValue and luckValue > highestLuckValue then
                                 highestLuckValue = luckValue
-                                local partforteleport = enemy:FindFirstChild("Decoration")
-                                local partforteleport2 = partforteleport and partforteleport:FindFirstChild("Meshes/floatingisland1_Circle.003")
+                                local partforteleport = enemy:FindFirstChild("EggPlatformSpawn")
+                                local partforteleport2 = partforteleport and partforteleport:FindFirstChildOfClass("Part")
                                 if partforteleport2 then
                                     highestLuckIsland = partforteleport2
                                 end
@@ -887,9 +887,9 @@ do
 
 
 
-                    local partforteleport = enemy:FindFirstChild("Decoration")
+                    local partforteleport = enemy:FindFirstChild("EggPlatformSpawn")
                     if partforteleport then
-                        local partforteleport2 = partforteleport:FindFirstChild("Meshes/floatingisland1_Circle.003")
+                        local partforteleport2 = partforteleport:FindFirstChildOfClass("Part")
                         if partforteleport2 and rootPart then
                             if partforteleport2.Position and rootPart.Position then
                                 local distance = (rootPart.Position - partforteleport2.Position).Magnitude
