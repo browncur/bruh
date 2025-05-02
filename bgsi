@@ -772,7 +772,6 @@ do
                         }
                         
                         game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Framework"):WaitForChild("Network"):WaitForChild("Remote"):WaitForChild("Event"):FireServer(unpack(args))        
-                        task.wait(0.1)
                     end
                     if Cooldown == nil or not Cooldown then
                         player:SetAttribute("NextEggOpenAt", 0)
