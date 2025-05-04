@@ -104,6 +104,20 @@ coroutine.wrap(function()
 	end
 end)()
 
+coroutine.wrap(function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local AFkReportModule = require(ReplicatedStorage:WaitForChild("Client"):WaitForChild("AFKReport"))
+
+    if AFkReportModule and AFkReportModule.AddPet then
+        local original_AddPet = hookfunction(AFkReportModule.AddPet, function(self, ...)
+            local args = {...}
+            
+            return
+        end)
+    else
+    end
+end)()
+
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
